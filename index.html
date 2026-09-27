@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font:14px/1.5 system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Signal Board</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font:14px/1.5 system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style><script src="/standalone.js"></script></head><body><title>Signal Board</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
@@ -294,7 +294,7 @@ const LIB = {
   docx: "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js",
   xlsx: "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
 };
-const blobUrl = id => "/_blob/" + id;
+const blobUrl = id => (window.__assetUrl && window.__assetUrl(id)) || "/_blob/" + id;
 const toast = msg => { const t = el("div", {class:"toast", role:"status", text: msg}); document.body.append(t); setTimeout(() => t.remove(), 3200); };
 const store = { get(k){ try { return localStorage.getItem(k); } catch { return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch {} } };
 
@@ -1274,7 +1274,7 @@ render();
   S.limits = sample ? await sample.limits().catch(() => null) : null;
   if (db) {
     S.db = db;
-    $("#mode").textContent = "Saved to this workspace";
+    $("#mode").textContent = window.__standalone ? "Saved in this browser" : "Saved to this workspace";
     db.collection("boards").onSnapshot(snap => { S.boards = snap.docs.map(d => ({id: d.id, ...d.data()})); S.loaded.boards = true; render(); }, () => toast("Lost connection to saved dashboards. Reload to reconnect."));
     db.collection("cards").onSnapshot(snap => { S.cards = snap.docs.map(d => ({id: d.id, ...d.data()})); S.loaded.cards = true; if (!ED) render(); else S.pendingRender = true; }, () => {});
   } else {

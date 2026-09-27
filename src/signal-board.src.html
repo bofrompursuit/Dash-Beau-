@@ -294,7 +294,7 @@ const LIB = {
   docx: "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js",
   xlsx: "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
 };
-const blobUrl = id => "/_blob/" + id;
+const blobUrl = id => (window.__assetUrl && window.__assetUrl(id)) || "/_blob/" + id;
 const toast = msg => { const t = el("div", {class:"toast", role:"status", text: msg}); document.body.append(t); setTimeout(() => t.remove(), 3200); };
 const store = { get(k){ try { return localStorage.getItem(k); } catch { return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch {} } };
 
@@ -1274,7 +1274,7 @@ render();
   S.limits = sample ? await sample.limits().catch(() => null) : null;
   if (db) {
     S.db = db;
-    $("#mode").textContent = "Saved to this workspace";
+    $("#mode").textContent = window.__standalone ? "Saved in this browser" : "Saved to this workspace";
     db.collection("boards").onSnapshot(snap => { S.boards = snap.docs.map(d => ({id: d.id, ...d.data()})); S.loaded.boards = true; render(); }, () => toast("Lost connection to saved dashboards. Reload to reconnect."));
     db.collection("cards").onSnapshot(snap => { S.cards = snap.docs.map(d => ({id: d.id, ...d.data()})); S.loaded.cards = true; if (!ED) render(); else S.pendingRender = true; }, () => {});
   } else {

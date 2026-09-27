@@ -3,7 +3,7 @@
 
 Inlines the map shapes into the page source and writes:
   artifact/signal-board.html  - the page as published as a Claude artifact
-  index.html                  - the same page wrapped as a full HTML document for static hosting
+  index.html                  - the same page as a full HTML document for your own site (uses standalone.js)
 Usage: python3 scripts/build.py
 """
 import json, pathlib
@@ -22,7 +22,8 @@ shell = (
     '<!doctype html><html lang="en"><head><meta charset="utf-8">'
     '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">'
     "<style>:root{color-scheme:light}body{margin:0;font:14px/1.5 system-ui,sans-serif}"
-    "img{max-width:100%}[hidden]{display:none!important}</style></head><body>"
+    "img{max-width:100%}[hidden]{display:none!important}</style>"
+    '<script src="/standalone.js"></script></head><body>'
 )
 (root / "index.html").write_text(shell + page + "</body></html>")
 print("Built artifact/signal-board.html and index.html (%d KB)" % (len(page) // 1024))

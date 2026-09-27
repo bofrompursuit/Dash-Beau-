@@ -21,7 +21,10 @@ src/signal-board.src.html   Page source (HTML, CSS, JS). Map data is inlined at 
 src/geo/                    Map shapes: world-atlas countries-110m, us-atlas states-albers-10m (ISC licence)
 scripts/build.py            Inlines the map shapes and writes the two built files below
 artifact/signal-board.html  Built page as published as a Claude artifact
-index.html                  Built page wrapped as a full HTML document for static hosting
+index.html                  Built page as a full HTML document for your own site
+standalone.js               Browser storage + /api/claude in place of the Claude runtime
+api/claude.js               Vercel function that calls the Anthropic API
+vercel.json                 Vercel settings
 examples/starter-board.json Example dashboard used to seed the starter board (made-up figures)
 ```
 
@@ -37,9 +40,18 @@ d3 7.9.0 · topojson 3.0.2 · pdf.js 3.11.174 · mammoth 1.6.0 · SheetJS xlsx 0
 
 ## Running it
 
-**As a Claude artifact (full features).** Saving, file storage and the Claude features use the Claude artifact runtime (`window.claude`): the `db` capability stores dashboards and cards, `assets` stores uploaded files, and `sample` calls Claude. Publish `artifact/signal-board.html` with the capabilities `db`, `assets` and `sample`.
+**On Vercel (your own site).** This repo deploys as-is: `index.html` is the app, `standalone.js` stands in for the Claude runtime, and `api/claude.js` is a serverless function for the Claude features.
 
-**As a static site (preview mode).** `index.html` runs on any static host (GitHub Pages, Vercel, Netlify) or straight from disk. Outside Claude there is no `window.claude`, so it opens in preview mode: charts, maps, pasting and file reading all work, but nothing is saved and the Claude buttons are hidden. A standalone deployment needs a storage backend and an AI API in place of the `db`, `assets` and `sample` calls; these are isolated in the `Data` object, the upload step in the card editor's save handler, and the `S.sample` calls.
+- Dashboards, cards and uploaded files are saved in the browser you use (IndexedDB). They stay on that device and browser; clearing site data removes them.
+- The Claude features ("Read with Claude", "Brief me") need an Anthropic API key. In the Vercel project, open Settings → Environment Variables and add:
+  - `ANTHROPIC_API_KEY` (required for Claude features)
+  - `APP_PASSCODE` (recommended: without it, anyone with the link can use your API credit; the site asks for the passcode once per browser)
+  - `ANTHROPIC_MODEL` (optional, default `claude-sonnet-5`)
+  Then redeploy. Without a key the app works fully except the Claude buttons are hidden.
+
+**As a Claude artifact.** `artifact/signal-board.html` is published with the capabilities `db`, `assets` and `sample`; Claude's runtime then provides shared saving, file storage and Claude calls, and `standalone.js` is not used.
+
+**Locally.** `python3 -m http.server` in this folder and open http://localhost:8000 (Claude features need `vercel dev` and a key).
 
 ## Data model
 
