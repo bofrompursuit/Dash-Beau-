@@ -43,8 +43,9 @@ module.exports = async function handler(req, res) {
     });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) {
-      const status = r.status === 429 || r.status === 529 ? 429 : r.status === 413 ? 413 : 502;
-      return res.status(status).json({error: (data.error && data.error.message) || "Anthropic API error " + r.status});
+      const msg = (data.error && data.error.message) || "Anthropic API error " + r.status;
+      const status = /credit balance/i.test(msg) ? 402 : r.status === 429 || r.status === 529 ? 429 : r.status === 413 ? 413 : 502;
+      return res.status(status).json({error: msg});
     }
     const out = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
     return res.status(200).json({text: out, stop_reason: data.stop_reason});

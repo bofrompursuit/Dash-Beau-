@@ -46,7 +46,29 @@
   const listeners = new Map();      // collection path -> Set<fn>
   let dbReady = null;
   function loadDocs() {
-    return dbReady ||= tx("docs", "readonly", s => s.getAll()).then(rows => { for (const r of rows || []) cache.set(r.path, r.data); }).catch(() => {});
+    return dbReady ||= tx("docs", "readonly", s => s.getAll()).then(rows => { for (const r of rows || []) cache.set(r.path, r.data); }).then(seedOnce).catch(() => {});
+  }
+  // First visit in this browser: add the example dashboard once. A marker doc
+  // records that it ran, so deleting the examples never brings them back.
+  const SEED_MARK = "_meta/seed";
+  async function seedOnce() {
+    if (cache.has(SEED_MARK)) return;
+    const hadData = [...cache.keys()].some(p => p.startsWith("boards/") || p.startsWith("cards/"));
+    const mark = {seededAt: Date.now(), skipped: hadData};
+    if (!hadData) {
+      try {
+        const r = await fetch("/examples/starter-board.json", {cache: "no-store"});
+        if (!r.ok) return;
+        const data = await r.json();
+        const rows = [];
+        for (const b of data.boards || []) { const {id, ...rest} = b; rows.push({path: "boards/" + id, data: rest}); }
+        for (const c of data.cards || []) { const {id, ...rest} = c; rows.push({path: "cards/" + id, data: rest}); }
+        await tx("docs", "readwrite", s => { for (const row of rows) s.put(row); });
+        for (const row of rows) cache.set(row.path, row.data);
+      } catch { return; }
+    }
+    cache.set(SEED_MARK, mark);
+    await tx("docs", "readwrite", s => s.put({path: SEED_MARK, data: mark})).catch(() => {});
   }
   const split = path => { const parts = path.split("/"); return {col: parts.slice(0, -1).join("/"), id: parts[parts.length - 1]}; };
   const docSnap = (path) => { const data = cache.get(path); const {id} = split(path); return {id, exists: data !== undefined, data: () => data === undefined ? undefined : clone(data), metadata: {fromCache: false, hasPendingWrites: false}}; };
@@ -141,7 +163,7 @@
       }
       const data = await r.json().catch(() => ({}));
       if (!r.ok) {
-        const code = r.status === 401 ? "not_granted" : r.status === 429 ? "rate_limited" : r.status === 413 ? "prompt_too_large" : r.status === 503 ? "sampling_disabled" : "upstream_error";
+        const code = r.status === 402 ? "billing" : r.status === 401 ? "not_granted" : r.status === 429 ? "rate_limited" : r.status === 413 ? "prompt_too_large" : r.status === 503 ? "sampling_disabled" : "upstream_error";
         throw {code, message: data.error || ("HTTP " + r.status)};
       }
       if (!data.text || !String(data.text).trim()) throw {code: "empty_completion", message: "No answer"};

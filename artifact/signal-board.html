@@ -864,6 +864,7 @@ function sampleErr(e) {
   if (c === "invalid_json") return "Claude's answer couldn't be read as a card. Try again.";
   if (c === "refused") return "Claude declined this material. Try different input.";
   if (c === "session_expired") return "Sign in again to use Claude.";
+  if (c === "billing") return "The Anthropic account for this site is out of credit. Add credit in the Anthropic Console, then try again.";
   if (c === "cancelled") return "";
   return "Something went wrong reaching Claude. Try again.";
 }
