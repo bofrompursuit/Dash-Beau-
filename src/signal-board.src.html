@@ -1,0 +1,1291 @@
+<title>Signal Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#eceef2; --surface:#fbfcfd; --surface-2:#f3f5f8; --ink:#131922; --ink-2:#4d5666; --muted:#747e8f;
+  --rule:#d6dbe3; --rule-2:#e4e8ee; --focus:#2a78d6; --btn:#18202c; --btn-ink:#f5f7fa;
+  --good:#1c7c43; --bad:#c23b3a; --map-empty:#e3e7ed; --map-edge:#fbfcfd;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300; --s7:#4a3aa7; --s8:#e34948;
+  --q1:#cde2fb; --q2:#9ec5f4; --q3:#5598e7; --q4:#256abf; --q5:#104281;
+  --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body:"Instrument Sans", "Helvetica Neue", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --shadow:0 1px 0 rgba(20,26,35,.04), 0 1px 3px rgba(20,26,35,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0e1116; --surface:#161b22; --surface-2:#1d232c; --ink:#e7ebf1; --ink-2:#b3bcc9; --muted:#8a94a4;
+    --rule:#2b323d; --rule-2:#232a33; --focus:#5598e7; --btn:#e7ebf1; --btn-ink:#10141a;
+    --good:#4cc07c; --bad:#ec6d6c; --map-empty:#252c36; --map-edge:#161b22;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
+    --q1:#1c3350; --q2:#1c5cab; --q3:#3987e5; --q4:#86b6ef; --q5:#cde2fb;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0e1116; --surface:#161b22; --surface-2:#1d232c; --ink:#e7ebf1; --ink-2:#b3bcc9; --muted:#8a94a4;
+  --rule:#2b323d; --rule-2:#232a33; --focus:#5598e7; --btn:#e7ebf1; --btn-ink:#10141a;
+  --good:#4cc07c; --bad:#ec6d6c; --map-empty:#252c36; --map-edge:#161b22;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
+  --q1:#1c3350; --q2:#1c5cab; --q3:#3987e5; --q4:#86b6ef; --q5:#cde2fb;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+
+.app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100%}
+/* Rail */
+.rail{border-right:1px solid var(--rule);padding:20px 14px;display:flex;flex-direction:column;gap:18px;position:sticky;top:env(safe-area-inset-top,0px);height:100vh;overflow:auto;background:var(--bg)}
+.brand{display:flex;align-items:center;gap:10px;padding:0 6px}
+.brand svg{flex:none}
+.brand b{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:-.01em}
+.rail h2{font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0;padding:0 8px}
+.boards{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.boards button{width:100%;text-align:left;border:0;background:none;padding:8px 10px;border-radius:8px;cursor:pointer;display:flex;justify-content:space-between;gap:8px;align-items:baseline;color:var(--ink-2)}
+.boards button:hover{background:var(--surface-2);color:var(--ink)}
+.boards button[aria-current="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);outline:1px solid var(--rule-2)}
+.boards .n{font-family:var(--mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.boards .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ghost{border:1px dashed var(--rule);background:none;border-radius:8px;padding:8px 10px;cursor:pointer;color:var(--ink-2);text-align:left}
+.ghost:hover{border-color:var(--ink-2);color:var(--ink)}
+.rail .foot{margin-top:auto;font-size:12px;color:var(--muted);padding:0 8px}
+.mode{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;padding:6px 8px;border-radius:6px;background:var(--surface-2);color:var(--ink-2)}
+
+/* Main */
+main{padding-block:22px 64px;padding-inline:28px;min-width:0}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:18px}
+.titlewrap{min-width:0;flex:1 1 320px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
+.btitle{font-family:var(--display);font-weight:700;font-size:clamp(26px,3.2vw,36px);letter-spacing:-.02em;line-height:1.1;margin:4px 0 0;border:0;background:none;padding:2px 4px;margin-left:-4px;width:100%;border-radius:6px;text-wrap:balance}
+.btitle:hover{background:var(--surface-2)}
+.btitle:focus{background:var(--surface);outline:1px solid var(--rule)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--rule);background:var(--surface);padding:8px 14px;border-radius:999px;cursor:pointer;font-weight:500;display:inline-flex;gap:8px;align-items:center;white-space:nowrap}
+.btn:hover{border-color:var(--ink-2)}
+.btn.primary{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
+.btn.primary:hover{opacity:.9}
+.btn[disabled]{opacity:.5;cursor:default}
+.btn.sm{padding:5px 10px;font-size:12.5px}
+.btn.danger{color:var(--bad)}
+.kbd{font-family:var(--mono);font-size:11px;opacity:.7}
+
+.brief{background:var(--surface);border:1px solid var(--rule-2);border-radius:14px;padding:16px 18px;margin-bottom:18px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px}
+.brief h3{margin:0;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.brief .body{grid-column:1/-1;max-width:78ch}
+.brief .body ul{margin:6px 0;padding-left:18px}
+.brief .body p{margin:6px 0}
+
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
+.card{grid-column:span 4;background:var(--surface);border:1px solid var(--rule-2);border-radius:14px;box-shadow:var(--shadow);display:flex;flex-direction:column;min-width:0}
+.card[data-span="6"]{grid-column:span 6}
+.card[data-span="12"]{grid-column:span 12}
+.chead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:14px 16px 4px}
+.ctitle{font-weight:600;font-size:15px;line-height:1.3;margin:0;text-wrap:balance}
+.chip{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border:1px solid var(--rule);border-radius:999px;padding:1px 7px;white-space:nowrap}
+.cmeta{display:flex;align-items:center;gap:6px;flex:none}
+.iconbtn{border:0;background:none;border-radius:6px;width:28px;height:28px;display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+.iconbtn:hover{background:var(--surface-2);color:var(--ink)}
+.cbody{padding:6px 16px 10px;flex:1;min-width:0}
+.insight{margin:0 16px 12px;padding-top:10px;border-top:1px solid var(--rule-2);color:var(--ink-2);font-size:13px}
+.insight b{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-right:6px}
+.cfoot{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:0 16px 14px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.src{display:inline-flex;align-items:center;gap:4px;max-width:100%;border:1px solid var(--rule);border-radius:6px;padding:2px 7px;text-decoration:none;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.src:hover{border-color:var(--ink-2);color:var(--ink)}
+
+.menu{position:absolute;z-index:40;background:var(--surface);border:1px solid var(--rule);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.14);padding:5px;min-width:180px;display:flex;flex-direction:column}
+.menu button{border:0;background:none;text-align:left;padding:7px 10px;border-radius:6px;cursor:pointer}
+.menu button:hover{background:var(--surface-2)}
+.menu hr{border:0;border-top:1px solid var(--rule-2);margin:4px 0}
+.menu .confirm{padding:8px 10px;font-size:13px;color:var(--ink-2)}
+
+/* Stat */
+.stat{display:flex;flex-direction:column;gap:2px;padding-top:6px}
+.stat .v{font-family:var(--display);font-weight:700;font-size:clamp(34px,4vw,48px);letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.stat .l{color:var(--ink-2);font-size:13px}
+.delta{font-family:var(--mono);font-size:12px;display:inline-flex;gap:4px;align-items:center}
+.delta.up{color:var(--good)} .delta.down{color:var(--bad)}
+
+/* Pie legend */
+.pie{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.pie svg{flex:none}
+.legend{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;flex:1 1 150px;min-width:0}
+.legend li{display:grid;grid-template-columns:10px minmax(0,1fr) auto auto;gap:8px;align-items:center;font-size:13px}
+.legend .sw{width:10px;height:10px;border-radius:3px}
+.legend .lb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)}
+.legend .vv{font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums}
+.legend .pc{font-family:var(--mono);font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:3.5em;text-align:right}
+
+svg text{fill:var(--muted);font-family:var(--mono);font-size:10.5px}
+svg .lbl{fill:var(--ink-2);font-family:var(--body);font-size:12px}
+svg .val{fill:var(--ink);font-size:11px}
+svg .grid line{stroke:var(--rule-2)}
+svg .axis path{display:none}
+svg .axis line{stroke:var(--rule)}
+
+.maplegend{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+.ramp{display:flex;gap:2px}
+.ramp i{display:block;width:22px;height:8px;border-radius:2px}
+.unmatched{font-size:11.5px;color:var(--muted);margin-top:4px}
+
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl td,.tbl th{padding:6px 4px;border-bottom:1px solid var(--rule-2);text-align:left}
+.tbl th{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.tbl td.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.tbl .bar{height:6px;border-radius:3px;background:var(--s1);opacity:.85}
+.tblwrap{overflow-x:auto;max-height:320px;overflow-y:auto}
+
+.note{font-size:14px;color:var(--ink);max-width:70ch}
+.note h4{font-family:var(--display);font-size:16px;margin:8px 0 4px}
+.note p{margin:6px 0}
+.note ul{margin:6px 0;padding-left:18px}
+.links{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.links a{display:flex;flex-direction:column;text-decoration:none;padding:8px 10px;border:1px solid var(--rule-2);border-radius:10px}
+.links a:hover{border-color:var(--ink-2)}
+.links .h{font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+.empty{grid-column:1/-1;border:1px dashed var(--rule);border-radius:14px;padding:40px 24px;text-align:center;color:var(--ink-2)}
+.empty h3{font-family:var(--display);font-size:22px;margin:0 0 6px;color:var(--ink)}
+
+/* Tooltip */
+.tip{position:fixed;z-index:60;pointer-events:none;background:var(--ink);color:var(--bg);padding:6px 9px;border-radius:8px;font-size:12px;line-height:1.35;max-width:240px;opacity:0;transition:opacity .08s}
+.tip b{font-family:var(--mono);font-weight:500}
+
+/* Editor */
+.scrim{position:fixed;inset:0;z-index:50;background:rgba(10,14,20,.42);display:grid;place-items:center;padding:16px}
+.sheet{background:var(--bg);border:1px solid var(--rule);border-radius:16px;width:min(1080px,100%);max-height:calc(100% - 8px);overflow:auto;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+.sheet .left{padding:20px 22px;display:flex;flex-direction:column;gap:14px;border-right:1px solid var(--rule)}
+.sheet .right{padding:20px 22px;display:flex;flex-direction:column;gap:12px;background:var(--surface-2)}
+.sheet h3{font-family:var(--display);font-size:22px;margin:0;letter-spacing:-.01em}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label,.flabel{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.field input,.field textarea,.field select{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:9px 11px;width:100%}
+.field textarea{min-height:190px;resize:vertical;font-family:var(--mono);font-size:12.5px;line-height:1.55}
+.field textarea.short{min-height:70px;font-family:var(--body);font-size:13.5px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>.field{flex:1 1 140px}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{border:1px solid var(--rule);background:var(--surface);border-radius:999px;padding:5px 11px;cursor:pointer;font-size:12.5px}
+.seg button[aria-pressed="true"]{background:var(--btn);color:var(--btn-ink);border-color:var(--btn)}
+.hint{font-size:12px;color:var(--muted)}
+.drop{border:1px dashed var(--rule);border-radius:10px;padding:8px 10px;font-size:12.5px;color:var(--ink-2);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.drop.over{border-color:var(--focus);background:var(--surface)}
+.ai{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.status{font-size:12.5px;color:var(--ink-2)}
+.preview-card{grid-column:auto;box-shadow:none}
+.sheet .foot{grid-column:1/-1;display:flex;justify-content:space-between;gap:8px;padding:14px 22px;border-top:1px solid var(--rule);background:var(--bg);position:sticky;bottom:0;flex-wrap:wrap}
+.detected{font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+.toast{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:10px;z-index:70;font-size:13px;max-width:calc(100% - 32px)}
+
+/* Attachments */
+.atts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.att{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--rule-2);border-radius:10px;padding:6px 8px}
+.att .ico{width:40px;height:40px;border-radius:7px;background:var(--surface-2);display:grid;place-items:center;font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--ink-2);overflow:hidden;text-transform:uppercase}
+.att .ico img{width:100%;height:100%;object-fit:cover}
+.att .nm{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.att .st{font-family:var(--mono);font-size:10.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.att .st.err{color:var(--bad)}
+.linkrow{display:flex;gap:6px}
+.linkrow input{flex:1;min-width:0;background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:7px 10px}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 12px}
+.thumbs a{display:block;width:64px;height:48px;border-radius:7px;overflow:hidden;border:1px solid var(--rule-2);background:var(--surface-2)}
+.thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+.filechip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);border-radius:6px;padding:2px 7px;text-decoration:none;color:var(--ink-2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.filechip .t{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+a.filechip:hover{border-color:var(--ink-2);color:var(--ink)}
+.media{display:flex;flex-direction:column;gap:10px}
+.media .imgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.media .imgs a{display:block;border-radius:10px;overflow:hidden;border:1px solid var(--rule-2);background:var(--surface-2);aspect-ratio:4/3;max-width:100%}
+.media .imgs img{width:100%;height:100%;object-fit:contain;display:block}
+.media .imgs.one{grid-template-columns:1fr}
+.media .imgs.one a{aspect-ratio:auto;max-height:360px}
+.media .doc{border:1px solid var(--rule-2);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.media .doc .h{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.media .doc p{margin:0;font-size:12.5px;color:var(--ink-2);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.dropping main{outline:2px dashed var(--focus);outline-offset:-10px;border-radius:16px}
+
+@media (max-width:1100px){.card{grid-column:span 6}.card[data-span="12"]{grid-column:span 12}}
+@media (max-width:880px){
+  .app{grid-template-columns:1fr}
+  .rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--rule);padding:14px 16px;gap:10px}
+  .boards{flex-direction:row;overflow-x:auto;gap:6px}
+  .boards li{flex:none}
+  .boards button{white-space:nowrap}
+  .rail .foot{display:none}
+  main{padding-inline:16px}
+  .sheet{grid-template-columns:1fr}
+  .sheet .left{border-right:0;border-bottom:1px solid var(--rule)}
+}
+@media (max-width:640px){.card,.card[data-span="6"]{grid-column:span 12}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="app">
+  <aside class="rail" aria-label="Dashboards">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="24" height="24" rx="7" fill="var(--btn)"/><rect x="6" y="13" width="3" height="7" rx="1.5" fill="var(--btn-ink)"/><rect x="11.5" y="9" width="3" height="11" rx="1.5" fill="var(--btn-ink)"/><rect x="17" y="6" width="3" height="14" rx="1.5" fill="var(--s2)"/></svg>
+      <b>Signal Board</b>
+    </div>
+    <h2>Dashboards</h2>
+    <ul class="boards" id="boards"></ul>
+    <button class="ghost" id="newBoard" type="button">+ New dashboard</button>
+    <div class="foot"><div class="mode" id="mode">Connecting…</div></div>
+  </aside>
+  <main>
+    <div class="top">
+      <div class="titlewrap">
+        <div class="eyebrow"><span id="count">—</span><span id="updated"></span></div>
+        <input class="btitle" id="btitle" aria-label="Dashboard name" value="">
+      </div>
+      <div class="actions">
+        <button class="btn" id="briefBtn" type="button" hidden>Brief me</button>
+        <button class="btn" id="boardMenuBtn" type="button" aria-label="Dashboard options">•••</button>
+        <button class="btn primary" id="addCard" type="button">+ Add card</button>
+      </div>
+    </div>
+    <section class="brief" id="brief" hidden aria-live="polite">
+      <h3>Board brief</h3><button class="btn sm" id="briefClose" type="button">Hide</button>
+      <div class="body" id="briefBody"></div>
+    </section>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
+<div class="tip" id="tip" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>
+const WORLD = /*__WORLD__*/null;
+const USA = /*__US__*/null;
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, ...kids) => {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === "class") n.className = v;
+    else if (k === "text") n.textContent = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const k of kids.flat()) if (k != null) n.append(k);
+  return n;
+};
+const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const SERIES = ["--s1","--s2","--s3","--s4","--s5","--s6","--s7","--s8"];
+const RAMP = ["--q1","--q2","--q3","--q4","--q5"];
+const scripts = {};
+function loadScript(src) {
+  return scripts[src] ||= new Promise((ok, bad) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => { delete scripts[src]; bad(new Error("load")); }; document.head.append(s); });
+}
+const LIB = {
+  pdf: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js",
+  pdfWorker: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js",
+  docx: "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js",
+  xlsx: "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+};
+const blobUrl = id => "/_blob/" + id;
+const toast = msg => { const t = el("div", {class:"toast", role:"status", text: msg}); document.body.append(t); setTimeout(() => t.remove(), 3200); };
+const store = { get(k){ try { return localStorage.getItem(k); } catch { return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch {} } };
+
+function fmt(v, unit = "", compact = false) {
+  if (v == null || !isFinite(v)) return "—";
+  const abs = Math.abs(v);
+  let s;
+  if (compact && abs >= 10000) s = new Intl.NumberFormat("en-US", {notation:"compact", maximumFractionDigits:1}).format(v);
+  else s = new Intl.NumberFormat("en-US", {maximumFractionDigits: abs < 10 ? 2 : abs < 1000 ? 1 : 0}).format(v);
+  if (!unit) return s;
+  if (unit === "%") return s + "%";
+  if (["$","€","£","¥"].includes(unit)) return v < 0 ? "−" + unit + s.replace("-", "") : unit + s;
+  return s + " " + unit;
+}
+
+/* ---------- parsing ---------- */
+function parseNumber(raw) {
+  if (raw == null) return NaN;
+  let s = String(raw).trim();
+  if (!s) return NaN;
+  let neg = false;
+  if (/^\(.*\)$/.test(s)) { neg = true; s = s.slice(1, -1); }
+  s = s.replace(/[$€£¥\s]/g, "").replace(/,/g, "").replace(/^[−–]/, "-");
+  let mult = 1;
+  const m = s.match(/^(-?[\d.]+)\s*(%|k|K|m|M|mm|bn|b|B|t|T)?$/);
+  if (!m) return NaN;
+  const suf = m[2] || "";
+  if (/^k$/i.test(suf)) mult = 1e3; else if (/^(m|mm)$/i.test(suf)) mult = 1e6; else if (/^(b|bn)$/i.test(suf)) mult = 1e9; else if (/^t$/i.test(suf)) mult = 1e12;
+  const n = parseFloat(m[1]) * mult;
+  return neg ? -n : n;
+}
+function unitOf(raw) {
+  const s = String(raw);
+  if (s.includes("$")) return "$"; if (s.includes("€")) return "€"; if (s.includes("£")) return "£"; if (s.includes("%")) return "%";
+  return "";
+}
+function splitRow(line, d) {
+  if (d !== ",") return line.split(d).map(c => c.trim());
+  const out = []; let cur = "", q = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') { if (q && line[i+1] === '"') { cur += '"'; i++; } else q = !q; }
+    else if (c === "," && !q) { out.push(cur.trim()); cur = ""; }
+    else cur += c;
+  }
+  out.push(cur.trim());
+  return out;
+}
+function hostOf(u) { try { const x = new URL(u); return x.hostname.replace(/^www\./, "") + (x.pathname.length > 1 ? x.pathname.replace(/\/$/, "") : ""); } catch { return u; } }
+
+function parseInput(text, valueCol) {
+  const res = { items: [], points: [], sources: [], note: "", columns: [], numericCols: [], unit: "", format: "" };
+  if (!text || !text.trim()) return res;
+  let body = text;
+  // markdown links first
+  body = body.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, (_, t, u) => { res.sources.push({title: t, url: u}); return ""; });
+  body = body.replace(/https?:\/\/[^\s<>"')]+/g, u => { u = u.replace(/[.,;]+$/, ""); if (!res.sources.some(s => s.url === u)) res.sources.push({title: hostOf(u), url: u}); return ""; });
+  const lines = body.split(/\r?\n/).map(l => l.replace(/\s+$/, "")).filter(l => l.trim() && !/^[\s\-–—•*]*$/.test(l));
+  if (!lines.length) return res;
+
+  // delimited table?
+  const delim = lines[0].includes("\t") ? "\t" : (lines.length > 1 && lines.filter(l => l.includes(",") && splitRow(l, ",").length === splitRow(lines[0], ",").length).length >= Math.ceil(lines.length * 0.8) && !/:\s/.test(lines[0])) ? "," : null;
+  if (delim) {
+    let rows = lines.map(l => splitRow(l, delim));
+    const width = Math.max(...rows.map(r => r.length));
+    if (width >= 2) {
+      const numericIn = (r, i) => isFinite(parseNumber(r[i]));
+      const hasHeader = rows[0].some((c, i) => !numericIn(rows[0], i)) && rows.length > 1 && rows[0].every((c, i) => !numericIn(rows[0], i) || rows.slice(1).every(r => !numericIn(r, i)));
+      const header = hasHeader ? rows[0] : rows[0].map((_, i) => i === 0 ? "Label" : "Value" + (width > 2 ? " " + i : ""));
+      const data = hasHeader ? rows.slice(1) : rows;
+      res.columns = header;
+      const isNum = header.map((_, i) => data.filter(r => isFinite(parseNumber(r[i]))).length >= Math.max(1, data.length * 0.7));
+      res.numericCols = header.map((h, i) => i).filter(i => isNum[i]);
+      const lower = header.map(h => h.toLowerCase().trim());
+      const latI = lower.findIndex(h => /^(lat|latitude)$/.test(h));
+      const lonI = lower.findIndex(h => /^(lon|lng|long|longitude)$/.test(h));
+      let labelI = header.findIndex((_, i) => !isNum[i]);
+      if (labelI < 0) labelI = 0;
+      const valueChoices = res.numericCols.filter(i => i !== latI && i !== lonI && i !== labelI);
+      let vI = valueChoices.includes(valueCol) ? valueCol : valueChoices[0];
+      res.valueCol = vI; res.valueName = vI != null ? header[vI] : "";
+      if (latI >= 0 && lonI >= 0) {
+        for (const r of data) {
+          const lat = parseNumber(r[latI]), lon = parseNumber(r[lonI]);
+          if (isFinite(lat) && isFinite(lon)) res.points.push({label: r[labelI] || "", lat, lon, value: vI != null ? parseNumber(r[vI]) : 1});
+        }
+        res.format = "CSV · " + res.points.length + " points";
+        return res;
+      }
+      if (vI != null) {
+        for (const r of data) {
+          const v = parseNumber(r[vI]);
+          if (isFinite(v)) res.items.push({label: r[labelI] ?? "", value: v});
+          if (!res.unit) res.unit = unitOf(r[vI]);
+        }
+        res.format = (delim === "\t" ? "TSV" : "CSV") + " · " + res.items.length + " rows · " + res.valueName;
+        return res;
+      }
+    }
+  }
+  // key: value lines
+  const noteLines = [];
+  const kv = /^\s*(?:[-*•]\s*)?(.+?)\s*(?::|=|\||–|—|\s-\s|\s{2,}|\t)\s*([-−(]?[$€£¥]?\s?-?[\d][\d,]*(?:\.\d+)?\s*(?:%|k|K|m|M|bn|b|B|t|T)?\)?)\s*(.*)$/;
+  const tailNum = /^\s*(?:[-*•]\s*)?(.*?[A-Za-z].*?)\s+([-−(]?[$€£¥]?-?[\d][\d,]*(?:\.\d+)?\s*(?:%|k|K|m|M|bn|b|B)?\)?)\s*$/;
+  for (const l of lines) {
+    let m = l.match(kv) || l.match(tailNum);
+    const v = m ? parseNumber(m[2]) : NaN;
+    if (m && isFinite(v) && m[1].length <= 60 && m[1].trim().split(/\s+/).length <= 7 && !(m[3] && m[3].split(" ").length > 4)) {
+      res.items.push({label: m[1].replace(/^[-*•]\s*/, "").trim(), value: v});
+      if (!res.unit) res.unit = unitOf(m[2]);
+    } else if (isFinite(parseNumber(l))) {
+      res.items.push({label: "", value: parseNumber(l)});
+      if (!res.unit) res.unit = unitOf(l);
+    } else noteLines.push(l);
+  }
+  res.note = noteLines.join("\n");
+  if (res.items.length) res.format = res.items.length + " value" + (res.items.length > 1 ? "s" : "");
+  if (res.note) res.format += (res.format ? " · " : "") + noteLines.length + " note line" + (noteLines.length > 1 ? "s" : "");
+  return res;
+}
+
+/* ---------- geography ---------- */
+const worldFeatures = WORLD ? topojson.feature(WORLD, WORLD.objects.countries).features : [];
+const usFeatures = USA ? topojson.feature(USA, USA.objects.states).features : [];
+const usNation = USA ? topojson.mesh(USA, USA.objects.nation) : null;
+const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+const WORLD_ALIAS = {"usa":"United States of America","us":"United States of America","united states":"United States of America","america":"United States of America","uk":"United Kingdom","great britain":"United Kingdom","britain":"United Kingdom","england":"United Kingdom","czech republic":"Czechia","drc":"Dem. Rep. Congo","dr congo":"Dem. Rep. Congo","democratic republic of the congo":"Dem. Rep. Congo","republic of the congo":"Congo","uae":"United Arab Emirates","ivory coast":"Côte d'Ivoire","cote divoire":"Côte d'Ivoire","bosnia":"Bosnia and Herz.","bosnia and herzegovina":"Bosnia and Herz.","central african republic":"Central African Rep.","dominican republic":"Dominican Rep.","south sudan":"S. Sudan","eswatini":"eSwatini","swaziland":"eSwatini","north macedonia":"Macedonia","korea":"South Korea","republic of korea":"South Korea","s korea":"South Korea","n korea":"North Korea","russian federation":"Russia","viet nam":"Vietnam","burma":"Myanmar","holland":"Netherlands","the netherlands":"Netherlands","turkiye":"Turkey","equatorial guinea":"Eq. Guinea","western sahara":"W. Sahara","solomon islands":"Solomon Is.","falkland islands":"Falkland Is.","east timor":"Timor-Leste","lao pdr":"Laos","persia":"Iran"};
+const worldIndex = new Map(worldFeatures.map(f => [norm(f.properties.name), f]));
+for (const [k, v] of Object.entries(WORLD_ALIAS)) { const f = worldIndex.get(norm(v)); if (f) worldIndex.set(norm(k), f); }
+const US_ABBR = {AL:"Alabama",AK:"Alaska",AZ:"Arizona",AR:"Arkansas",CA:"California",CO:"Colorado",CT:"Connecticut",DE:"Delaware",DC:"District of Columbia",FL:"Florida",GA:"Georgia",HI:"Hawaii",ID:"Idaho",IL:"Illinois",IN:"Indiana",IA:"Iowa",KS:"Kansas",KY:"Kentucky",LA:"Louisiana",ME:"Maine",MD:"Maryland",MA:"Massachusetts",MI:"Michigan",MN:"Minnesota",MS:"Mississippi",MO:"Missouri",MT:"Montana",NE:"Nebraska",NV:"Nevada",NH:"New Hampshire",NJ:"New Jersey",NM:"New Mexico",NY:"New York",NC:"North Carolina",ND:"North Dakota",OH:"Ohio",OK:"Oklahoma",OR:"Oregon",PA:"Pennsylvania",RI:"Rhode Island",SC:"South Carolina",SD:"South Dakota",TN:"Tennessee",TX:"Texas",UT:"Utah",VT:"Vermont",VA:"Virginia",WA:"Washington",WV:"West Virginia",WI:"Wisconsin",WY:"Wyoming",PR:"Puerto Rico"};
+const usIndex = new Map(usFeatures.map(f => [norm(f.properties.name), f]));
+for (const [k, v] of Object.entries(US_ABBR)) { const f = usIndex.get(norm(v)); if (f) usIndex.set(norm(k), f); }
+usIndex.set("washington dc", usIndex.get("district of columbia")); usIndex.set("dc", usIndex.get("district of columbia"));
+function geoMatch(items) {
+  const labels = items.map(i => norm(i.label)).filter(Boolean);
+  if (!labels.length) return null;
+  const us = labels.filter(l => usIndex.has(l)).length, w = labels.filter(l => worldIndex.has(l)).length;
+  // two-letter codes like "US" or "CA" are ambiguous; favour the scope with more hits
+  if (us / labels.length >= 0.6 && us >= w) return "us";
+  if (w / labels.length >= 0.6) return "world";
+  return null;
+}
+
+/* ---------- kind detection ---------- */
+const MONTHS = /^(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?(\s*'?\d{2,4})?$/i;
+function temporal(label) {
+  const s = String(label).trim();
+  return MONTHS.test(s) || /^(19|20)\d{2}([-/]\d{1,2}([-/]\d{1,2})?)?$/.test(s) || /^q[1-4]\s*'?\d{0,4}$/i.test(s) || /^\d{4}\s*q[1-4]$/i.test(s) || /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$/.test(s) || /^(week|wk|day|month|year)\s*\d+$/i.test(s) || /^(fy|h[12])\s*'?\d{2,4}$/i.test(s);
+}
+function autoKind(p) {
+  if (p.points.length) return {kind: "map", scope: pointsScope(p.points)};
+  if (!p.items.length) return {kind: p.note ? "note" : p.sources.length ? "links" : "note"};
+  if (p.items.length === 1) return {kind: "stat"};
+  const g = geoMatch(p.items);
+  if (g) return {kind: "map", scope: g};
+  if (p.items.filter(i => temporal(i.label)).length >= p.items.length * 0.7) return {kind: "line"};
+  const allPos = p.items.every(i => i.value >= 0);
+  const sum = d3.sum(p.items, i => i.value);
+  if (allPos && p.items.length <= 7 && (p.unit === "%" ? Math.abs(sum - 100) < 3 : true)) return {kind: "pie"};
+  return {kind: p.items.length > 25 ? "table" : "bar"};
+}
+function pointsScope(points) {
+  return points.every(p => p.lat > 18 && p.lat < 72 && p.lon > -170 && p.lon < -65) ? "us" : "world";
+}
+
+/* ---------- data layer ---------- */
+const S = { boards: [], cards: [], current: null, live: false, db: null, sample: null, loaded: {boards:false, cards:false} };
+const DEMO_BOARD = {id: "demo", name: "Preview", order: 0};
+const Data = {
+  async setBoard(b) { if (S.db) return S.db.doc("boards/" + b.id).set(clean(b)); upsert(S.boards, b); render(); },
+  async setCard(c) { if (S.db) return S.db.doc("cards/" + c.id).set(clean(c)); upsert(S.cards, c); render(); },
+  async delCard(id) { if (S.db) return S.db.doc("cards/" + id).delete(); S.cards = S.cards.filter(c => c.id !== id); render(); },
+  async delBoard(id) { if (S.db) { for (const c of S.cards.filter(c => c.boardId === id)) await S.db.doc("cards/" + c.id).delete(); return S.db.doc("boards/" + id).delete(); } S.boards = S.boards.filter(b => b.id !== id); S.cards = S.cards.filter(c => c.boardId !== id); render(); }
+};
+function clean(o) { const x = JSON.parse(JSON.stringify(o)); delete x.id; return x; }
+function upsert(arr, o) { const i = arr.findIndex(x => x.id === o.id); if (i >= 0) arr[i] = o; else arr.push(o); }
+async function guard(p) {
+  try { await p; return true; }
+  catch (e) {
+    if (e && e.code === "invalid_argument") toast("You can view this dashboard but not change it. Ask the owner for Contributor access.");
+    else if (e && e.code === "quota_exceeded") toast("This workspace is full. Delete a few cards to add more.");
+    else toast("That change didn't save. Try again in a moment.");
+    return false;
+  }
+}
+
+/* ---------- rendering ---------- */
+const boardCards = id => S.cards.filter(c => c.boardId === id).sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || (a.createdAt ?? 0) - (b.createdAt ?? 0));
+function currentBoard() { return S.boards.find(b => b.id === S.current) || null; }
+
+function render() {
+  const boards = [...S.boards].sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || (a.createdAt ?? 0) - (b.createdAt ?? 0));
+  if (!boards.find(b => b.id === S.current)) S.current = boards[0]?.id || null;
+  const ul = $("#boards"); ul.replaceChildren();
+  for (const b of boards) {
+    ul.append(el("li", {}, el("button", {type:"button", "aria-current": String(b.id === S.current), onclick: () => { S.current = b.id; store.set("sb.board", b.id); render(); }},
+      el("span", {class:"nm", text: b.name || "Untitled"}), el("span", {class:"n", text: String(boardCards(b.id).length)}))));
+  }
+  const b = currentBoard();
+  const t = $("#btitle");
+  if (document.activeElement !== t) t.value = b ? b.name || "" : "";
+  t.disabled = !b;
+  $("#addCard").disabled = !b;
+  const cards = b ? boardCards(b.id) : [];
+  $("#count").textContent = b ? cards.length + (cards.length === 1 ? " card" : " cards") : "No dashboard yet";
+  const last = d3.max(cards, c => c.updatedAt || c.createdAt);
+  $("#updated").textContent = last ? "Updated " + new Date(last).toLocaleDateString(undefined, {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}) : "";
+  $("#briefBtn").hidden = !S.sample || !cards.length;
+  // brief
+  if (b && b.brief && b.brief.text && !S.briefHidden) { $("#brief").hidden = false; $("#briefBody").replaceChildren(md(b.brief.text)); }
+  else if (!S.briefStreaming) $("#brief").hidden = true;
+
+  const grid = $("#grid"); grid.replaceChildren();
+  if (!b) {
+    const waiting = S.db && !(S.loaded.boards && S.loaded.cards);
+    grid.append(el("div", {class:"empty"}, el("h3", {text: waiting ? "Loading your dashboards…" : "Start your first dashboard"}), waiting ? null : el("p", {text: "Create a dashboard, then add cards by pasting data, research notes, or links."}), waiting ? null : el("button", {class:"btn primary", type:"button", onclick: newBoard, text:"+ New dashboard"})));
+    return;
+  }
+  if (!cards.length) {
+    grid.append(el("div", {class:"empty"}, el("h3", {text:"This dashboard is empty"}), el("p", {text:"Add a card and paste a table, a list like “Rent: 1850”, a paragraph of research, or a few links."}), el("button", {class:"btn primary", type:"button", onclick: () => openEditor(), text:"+ Add card"})));
+    return;
+  }
+  for (const c of cards) grid.append(cardEl(c));
+  requestAnimationFrame(() => drawAll());
+}
+
+function cardEl(c, preview = false) {
+  const body = el("div", {class:"cbody"});
+  body._card = c;
+  const kindName = {stat:"Number", pie:"Pie", bar:"Bar", line:"Trend", map:"Map", table:"Table", note:"Notes", links:"Links", media:"Files"}[c.kind] || c.kind;
+  const menuBtn = preview ? null : el("button", {class:"iconbtn", type:"button", "aria-label": "Card options for " + (c.title || "card"), onclick: e => cardMenu(e, c)},
+    svgIcon("M4 8.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm4 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Zm4 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"));
+  const node = el("article", {class:"card" + (preview ? " preview-card" : ""), "data-span": String(c.span || 4)},
+    el("header", {class:"chead"}, el("h3", {class:"ctitle", text: c.title || "Untitled card"}), el("div", {class:"cmeta"}, el("span", {class:"chip", text: kindName}), menuBtn)),
+    body);
+  const atts = c.kind === "media" ? [] : (c.attachments || []);
+  const pics = atts.filter(a => attImg(a));
+  if (pics.length) node.append(el("div", {class:"thumbs"}, ...pics.slice(0, 6).map(a => el("a", {href: attHref(a), target:"_blank", rel:"noopener", title: a.name}, el("img", {src: attImg(a), alt: a.name, loading:"lazy"})))));
+  if (c.insight) node.append(el("p", {class:"insight"}, el("b", {text:"Reading"}), c.insight));
+  const srcs = (c.sources || []).filter(s => s && s.url && c.kind !== "links");
+  const foot = el("footer", {class:"cfoot"});
+  if (c.origin) foot.append(el("span", {text: c.origin}));
+  for (const a of atts.filter(a => !attImg(a))) foot.append(fileChip(a));
+  for (const s of srcs.slice(0, 4)) foot.append(el("a", {class:"src", href: s.url, target:"_blank", rel:"noopener", title: s.url, text: "↗ " + (s.title || hostOf(s.url))}));
+  if (srcs.length > 4) foot.append(el("span", {text: "+" + (srcs.length - 4) + " more"}));
+  if (foot.childNodes.length) node.append(foot);
+  return node;
+}
+function fileChip(a) {
+  const href = attHref(a);
+  const kids = [el("span", {class:"t", text: KIND_TAG[a.kind] || "FILE"}), a.name];
+  return href ? el("a", {class:"filechip", href, target:"_blank", rel:"noopener", title: a.summary || a.name}, ...kids) : el("span", {class:"filechip", title: a.summary || a.name}, ...kids);
+}
+function drawMedia(b, c) {
+  const atts = c.attachments || [];
+  const box = el("div", {class:"media"});
+  const pics = atts.filter(a => attImg(a));
+  if (pics.length) box.append(el("div", {class:"imgs" + (pics.length === 1 ? " one" : "")}, ...pics.map(a => el("a", {href: attHref(a), target:"_blank", rel:"noopener", title: a.name}, el("img", {src: attImg(a), alt: a.name, loading:"lazy"})))));
+  for (const a of atts.filter(a => !attImg(a))) {
+    const excerpt = (a.text || "").replace(/\[(Page|Sheet)[^\]]*\]\s*/g, "").replace(/\s+/g, " ").trim().slice(0, 420);
+    box.append(el("div", {class:"doc"}, el("div", {class:"h"}, fileChip(a), el("span", {class:"detected", text: a.summary || ""})), excerpt ? el("p", {text: excerpt}) : null));
+  }
+  if (c.note) box.append(md(c.note));
+  if (!box.childNodes.length) box.append(el("p", {class:"hint", text:"No files yet."}));
+  b.append(box);
+}
+function svgIcon(d) { const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"); s.setAttribute("width", "16"); s.setAttribute("height", "16"); s.setAttribute("viewBox", "0 0 16 16"); s.setAttribute("aria-hidden", "true"); const p = document.createElementNS(s.namespaceURI, "path"); p.setAttribute("d", d); p.setAttribute("fill", "currentColor"); s.append(p); return s; }
+
+function drawAll(root = document) { root.querySelectorAll(".cbody").forEach(b => drawBody(b)); }
+function drawBody(b) {
+  const c = b._card; if (!c) return;
+  b.replaceChildren();
+  const w = Math.max(200, b.clientWidth - 32);
+  try {
+    ({stat: drawStat, pie: drawPie, bar: drawBar, line: drawLine, map: drawMap, table: drawTable, note: drawNote, links: drawLinks, media: drawMedia}[c.kind] || drawNote)(b, c, w);
+  } catch (e) { console.error(e); b.append(el("p", {class:"hint", text:"This card's data couldn't be drawn. Edit the card to check its input."})); }
+}
+
+/* tooltip */
+const tip = $("#tip");
+function showTip(ev, html) { tip.innerHTML = html; tip.style.opacity = 1; const x = Math.min(ev.clientX + 14, innerWidth - tip.offsetWidth - 8), y = Math.max(8, ev.clientY - tip.offsetHeight - 12); tip.style.left = x + "px"; tip.style.top = y + "px"; }
+function hideTip() { tip.style.opacity = 0; }
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function foldItems(items, max = 7) {
+  const arr = items.filter(i => i.value > 0).sort((a, b) => b.value - a.value);
+  if (arr.length <= max) return arr;
+  const head = arr.slice(0, max - 1), rest = arr.slice(max - 1);
+  return [...head, {label: "Other (" + rest.length + ")", value: d3.sum(rest, r => r.value)}];
+}
+
+function drawStat(b, c, w) {
+  const items = c.items || [];
+  const stat = c.stat && isFinite(c.stat.value) ? c.stat : items.length ? {value: items[items.length - 1].value, label: items[items.length - 1].label} : null;
+  if (!stat) { b.append(el("p", {class:"hint", text:"No number found yet."})); return; }
+  const box = el("div", {class:"stat"}, el("div", {class:"v", text: fmt(stat.value, c.unit, true)}), stat.label ? el("div", {class:"l", text: stat.label}) : null);
+  let delta = c.stat && c.stat.delta;
+  if (!delta && items.length >= 2) {
+    const a = items[items.length - 2].value, z = items[items.length - 1].value;
+    if (a) { const pct = (z - a) / Math.abs(a) * 100; delta = (pct >= 0 ? "+" : "−") + Math.abs(pct).toFixed(1) + "% vs " + (items[items.length - 2].label || "previous"); }
+  }
+  if (delta) { const up = !/^[-−]/.test(delta.trim()); box.append(el("div", {class:"delta " + (up ? "up" : "down"), text: (up ? "▲ " : "▼ ") + delta.replace(/^[+\-−]\s?/, up ? "+" : "−")})); }
+  b.append(box);
+  if (items.length >= 3) {
+    const h = 46, svg = d3.select(b).append("svg").attr("width", w).attr("height", h + 8).attr("role", "img").attr("aria-label", "Trend of " + items.length + " values");
+    const x = d3.scaleLinear([0, items.length - 1], [3, w - 5]), y = d3.scaleLinear(d3.extent(items, d => d.value), [h, 4]).nice();
+    svg.append("path").attr("d", d3.area().x((d, i) => x(i)).y0(h).y1(d => y(d.value)).curve(d3.curveMonotoneX)(items)).attr("fill", css("--s1")).attr("opacity", .12);
+    svg.append("path").attr("d", d3.line().x((d, i) => x(i)).y(d => y(d.value)).curve(d3.curveMonotoneX)(items)).attr("fill", "none").attr("stroke", css("--s1")).attr("stroke-width", 2);
+    svg.append("circle").attr("cx", x(items.length - 1)).attr("cy", y(items[items.length - 1].value)).attr("r", 4).attr("fill", css("--s1")).attr("stroke", css("--surface")).attr("stroke-width", 2);
+  }
+}
+
+function drawPie(b, c, w) {
+  const items = foldItems(c.items || []);
+  if (!items.length) { b.append(el("p", {class:"hint", text:"A pie needs positive values."})); return; }
+  const total = d3.sum(items, d => d.value);
+  const size = Math.min(170, Math.max(130, w * 0.42)), r = size / 2;
+  const wrap = el("div", {class:"pie"}); b.append(wrap);
+  const svg = d3.select(wrap).append("svg").attr("width", size).attr("height", size).attr("role", "img").attr("aria-label", "Pie chart of " + items.length + " parts");
+  const g = svg.append("g").attr("transform", `translate(${r},${r})`);
+  const arc = d3.arc().innerRadius(r * 0.6).outerRadius(r - 2).cornerRadius(3);
+  const color = i => css(SERIES[i % 8]);
+  g.selectAll("path").data(d3.pie().sort(null).value(d => d.value)(items)).join("path")
+    .attr("d", arc).attr("fill", (d, i) => color(i)).attr("stroke", css("--surface")).attr("stroke-width", 2)
+    .on("mousemove", (ev, d) => showTip(ev, `${esc(d.data.label || "Value")}<br><b>${fmt(d.data.value, c.unit)}</b> · ${(d.data.value / total * 100).toFixed(1)}%`))
+    .on("mouseleave", hideTip);
+  g.append("text").attr("text-anchor", "middle").attr("dy", "-0.1em").attr("class", "val").style("font-family", "var(--display)").style("font-size", "20px").style("font-weight", 700).text(fmt(total, c.unit, true));
+  g.append("text").attr("text-anchor", "middle").attr("dy", "1.4em").text("TOTAL");
+  const lg = el("ul", {class:"legend"});
+  items.forEach((d, i) => lg.append(el("li", {}, el("span", {class:"sw", style:`background:${color(i)}`}), el("span", {class:"lb", title: d.label, text: d.label || "Value " + (i + 1)}), el("span", {class:"vv", text: fmt(d.value, c.unit, true)}), el("span", {class:"pc", text: (d.value / total * 100).toFixed(1) + "%"}))));
+  wrap.append(lg);
+}
+
+function drawBar(b, c, w) {
+  let items = (c.items || []).slice();
+  if (!items.length) { b.append(el("p", {class:"hint", text:"No values to chart yet."})); return; }
+  if (!items.every(i => temporal(i.label))) items.sort((a, z) => z.value - a.value);
+  items = items.slice(0, 20);
+  const rowH = 26, labelW = Math.min(w * 0.38, Math.max(60, d3.max(items, d => String(d.label).length) * 6.6 + 8)), valW = 56;
+  const h = items.length * rowH;
+  const svg = d3.select(b).append("svg").attr("width", w).attr("height", h).attr("role", "img").attr("aria-label", "Bar chart of " + items.length + " values");
+  const lo = Math.min(0, d3.min(items, d => d.value)), hi = Math.max(0, d3.max(items, d => d.value));
+  const x = d3.scaleLinear([lo, hi], [labelW, w - valW]);
+  const y = d3.scaleBand(items.map((d, i) => i), [0, h]).paddingInner(0.28);
+  const row = svg.selectAll("g.r").data(items).join("g").attr("class", "r");
+  row.append("text").attr("class", "lbl").attr("x", labelW - 8).attr("y", (d, i) => y(i) + y.bandwidth() / 2).attr("dy", "0.35em").attr("text-anchor", "end")
+    .text(d => { const s = String(d.label || "—"); const max = Math.floor((labelW - 10) / 6.6); return s.length > max ? s.slice(0, max - 1) + "…" : s; });
+  row.append("rect").attr("x", d => x(Math.min(0, d.value))).attr("y", (d, i) => y(i)).attr("height", y.bandwidth()).attr("width", d => Math.max(2, Math.abs(x(d.value) - x(0)))).attr("rx", 4)
+    .attr("fill", d => d.value < 0 ? css("--s8") : css("--s1"));
+  row.append("text").attr("class", "val").attr("x", d => x(Math.max(0, d.value)) + 6).attr("y", (d, i) => y(i) + y.bandwidth() / 2).attr("dy", "0.35em").text(d => fmt(d.value, c.unit, true));
+  row.append("rect").attr("x", 0).attr("width", w).attr("y", (d, i) => y(i) - 3).attr("height", rowH).attr("fill", "transparent")
+    .on("mousemove", (ev, d) => showTip(ev, `${esc(d.label)}<br><b>${fmt(d.value, c.unit)}</b>`)).on("mouseleave", hideTip);
+  if ((c.items || []).length > 20) b.append(el("p", {class:"hint", text: "Showing the top 20 of " + c.items.length + ". Switch to Table to see all."}));
+}
+
+function drawLine(b, c, w) {
+  const items = (c.items || []).filter(d => isFinite(d.value));
+  if (items.length < 2) { drawStat(b, c, w); return; }
+  const h = 190, m = {t: 14, r: 66, b: 24, l: 48};
+  const svg = d3.select(b).append("svg").attr("width", w).attr("height", h).attr("role", "img").attr("aria-label", "Trend line of " + items.length + " points");
+  const x = d3.scalePoint(items.map((d, i) => i), [m.l, w - m.r]);
+  let [lo, hi] = d3.extent(items, d => d.value); const pad = (hi - lo) * 0.12 || Math.abs(hi) * 0.1 || 1;
+  const y = d3.scaleLinear([lo >= 0 && lo - pad < 0 ? 0 : lo - pad, hi + pad], [h - m.b, m.t]).nice(4);
+  svg.append("g").attr("class", "grid").selectAll("line").data(y.ticks(4)).join("line").attr("x1", m.l).attr("x2", w - m.r).attr("y1", y).attr("y2", y);
+  svg.append("g").attr("class", "axis").attr("transform", `translate(${m.l - 6},0)`).call(d3.axisLeft(y).ticks(4).tickSize(0).tickFormat(v => fmt(v, c.unit, true)));
+  const step = Math.ceil(items.length / Math.max(2, Math.floor((w - m.l - m.r) / 70)));
+  svg.append("g").attr("class", "axis").attr("transform", `translate(0,${h - m.b + 14})`).selectAll("text").data(items.map((d, i) => i).filter(i => i % step === 0 || i === items.length - 1)).join("text")
+    .attr("x", i => x(i)).attr("text-anchor", "middle").text(i => { const s = String(items[i].label); return s.length > 10 ? s.slice(0, 9) + "…" : s; });
+  const s1 = css("--s1");
+  const grad = "g" + Math.random().toString(36).slice(2, 7);
+  const lg = svg.append("defs").append("linearGradient").attr("id", grad).attr("x1", 0).attr("x2", 0).attr("y1", 0).attr("y2", 1);
+  lg.append("stop").attr("offset", 0).attr("stop-color", s1).attr("stop-opacity", .22); lg.append("stop").attr("offset", 1).attr("stop-color", s1).attr("stop-opacity", 0);
+  svg.append("path").attr("d", d3.area().x((d, i) => x(i)).y0(y.range()[0]).y1(d => y(d.value)).curve(d3.curveMonotoneX)(items)).attr("fill", `url(#${grad})`);
+  svg.append("path").attr("d", d3.line().x((d, i) => x(i)).y(d => y(d.value)).curve(d3.curveMonotoneX)(items)).attr("fill", "none").attr("stroke", s1).attr("stroke-width", 2);
+  const L = items.length - 1;
+  svg.append("circle").attr("cx", x(L)).attr("cy", y(items[L].value)).attr("r", 4.5).attr("fill", s1).attr("stroke", css("--surface")).attr("stroke-width", 2);
+  svg.append("text").attr("class", "val").attr("x", x(L) + 8).attr("y", y(items[L].value)).attr("dy", "0.35em").text(fmt(items[L].value, c.unit, true));
+  const cross = svg.append("line").attr("stroke", css("--muted")).attr("stroke-dasharray", "2 3").attr("y1", m.t).attr("y2", h - m.b).attr("opacity", 0);
+  const dot = svg.append("circle").attr("r", 4).attr("fill", s1).attr("stroke", css("--surface")).attr("stroke-width", 2).attr("opacity", 0);
+  svg.append("rect").attr("x", m.l - 10).attr("width", w - m.l - m.r + 20).attr("y", 0).attr("height", h).attr("fill", "transparent")
+    .on("mousemove", ev => { const [px] = d3.pointer(ev); let i = Math.round((px - m.l) / (x.step() || 1)); i = Math.max(0, Math.min(L, i)); cross.attr("x1", x(i)).attr("x2", x(i)).attr("opacity", 1); dot.attr("cx", x(i)).attr("cy", y(items[i].value)).attr("opacity", 1); showTip(ev, `${esc(items[i].label)}<br><b>${fmt(items[i].value, c.unit)}</b>`); })
+    .on("mouseleave", () => { cross.attr("opacity", 0); dot.attr("opacity", 0); hideTip(); });
+}
+
+function drawMap(b, c, w) {
+  const scope = c.scope === "us" ? "us" : "world";
+  const items = c.items || [], points = c.points || [];
+  const idx = scope === "us" ? usIndex : worldIndex, feats = scope === "us" ? usFeatures : worldFeatures;
+  if (!feats.length) { b.append(el("p", {class:"hint", text:"Map shapes are unavailable in this view."})); return; }
+  const vals = new Map(), missed = [];
+  for (const it of items) { const f = idx.get(norm(it.label)); if (f) vals.set(f, (vals.get(f) || 0) + it.value); else if (it.label) missed.push(it.label); }
+  const [lo, hi] = d3.extent([...vals.values()]);
+  const rampCols = RAMP.map(css);
+  const q = lo === undefined ? null : lo === hi ? () => rampCols[3] : d3.scaleQuantize([lo, hi], rampCols);
+  const W = 960, H = scope === "us" ? 610 : 500;
+  const svg = d3.select(b).append("svg").attr("viewBox", `0 0 ${W} ${H}`).attr("width", "100%").style("display", "block").style("max-height", "440px").attr("role", "img").attr("aria-label", (scope === "us" ? "US" : "World") + " map with " + (vals.size || points.length) + " values");
+  let path, proj;
+  if (scope === "us") { path = d3.geoPath(); proj = d3.geoAlbersUsa().scale(1300).translate([487.5, 305]); }
+  else { proj = d3.geoNaturalEarth1().fitExtent([[4, 4], [W - 4, H - 4]], {type: "Sphere"}); path = d3.geoPath(proj); }
+  const shapes = scope === "us" ? feats : feats.filter(f => f.properties.name !== "Antarctica");
+  svg.append("g").selectAll("path").data(shapes).join("path").attr("d", path)
+    .attr("fill", f => vals.has(f) && q ? q(vals.get(f)) : css("--map-empty")).attr("stroke", css("--map-edge")).attr("stroke-width", scope === "us" ? 1 : 0.6)
+    .on("mousemove", (ev, f) => showTip(ev, `${esc(f.properties.name)}<br><b>${vals.has(f) ? fmt(vals.get(f), c.unit) : "No data"}</b>`)).on("mouseleave", hideTip);
+  if (points.length) {
+    const pv = points.map(p => Math.abs(p.value || 1));
+    const r = d3.scaleSqrt([0, d3.max(pv)], [0, scope === "us" ? 26 : 22]);
+    svg.append("g").selectAll("circle").data(points.filter(p => proj([p.lon, p.lat]))).join("circle")
+      .attr("cx", p => proj([p.lon, p.lat])[0]).attr("cy", p => proj([p.lon, p.lat])[1]).attr("r", p => Math.max(5, r(Math.abs(p.value || 1))))
+      .attr("fill", css("--s2")).attr("fill-opacity", .78).attr("stroke", css("--surface")).attr("stroke-width", 2)
+      .on("mousemove", (ev, p) => showTip(ev, `${esc(p.label || "Point")}<br><b>${fmt(p.value, c.unit)}</b>`)).on("mouseleave", hideTip);
+  }
+  if (q && lo !== hi) {
+    const lgd = el("div", {class:"maplegend"}, el("span", {text: fmt(lo, c.unit, true)}), el("span", {class:"ramp"}, ...rampCols.map(col => el("i", {style:`background:${col}`}))), el("span", {text: fmt(hi, c.unit, true)}));
+    b.append(lgd);
+  }
+  if (missed.length) b.append(el("p", {class:"unmatched", text: "Not on the map: " + missed.slice(0, 6).join(", ") + (missed.length > 6 ? " +" + (missed.length - 6) : "")}));
+}
+
+function drawTable(b, c) {
+  const items = c.items || [];
+  if (!items.length) { b.append(el("p", {class:"hint", text:"No rows yet."})); return; }
+  const max = d3.max(items, d => Math.abs(d.value)) || 1;
+  const wrap = el("div", {class:"tblwrap"});
+  const t = el("table", {class:"tbl"}, el("thead", {}, el("tr", {}, el("th", {text: c.labelName || "Label"}), el("th", {text: c.valueName || "Value", style:"text-align:right"}), el("th", {style:"width:30%"}))));
+  const tb = el("tbody");
+  for (const d of items) tb.append(el("tr", {}, el("td", {text: d.label}), el("td", {class:"num", text: fmt(d.value, c.unit)}), el("td", {}, el("div", {class:"bar", style:`width:${Math.abs(d.value) / max * 100}%`}))));
+  t.append(tb); wrap.append(t); b.append(wrap);
+}
+
+function md(text) {
+  const box = el("div", {class:"note"});
+  let list = null;
+  const inline = s => { const span = el("span"); String(s).split(/(\*\*[^*]+\*\*)/g).forEach(part => { if (/^\*\*[^*]+\*\*$/.test(part)) span.append(el("strong", {text: part.slice(2, -2)})); else if (part) span.append(part); }); return span; };
+  for (const raw of String(text || "").split(/\r?\n/)) {
+    const l = raw.trim();
+    if (!l) { list = null; continue; }
+    if (/^#{1,4}\s/.test(l)) { list = null; box.append(el("h4", {}, inline(l.replace(/^#+\s*/, "")))); }
+    else if (/^[-*•]\s+/.test(l)) { if (!list) { list = el("ul"); box.append(list); } list.append(el("li", {}, inline(l.replace(/^[-*•]\s+/, "")))); }
+    else { list = null; box.append(el("p", {}, inline(l))); }
+  }
+  return box;
+}
+function drawNote(b, c) { if (c.note) b.append(md(c.note)); else if (!(c.sources || []).length) b.append(el("p", {class:"hint", text:"No notes yet."})); if ((c.sources || []).length && c.kind === "note") drawLinks(b, c); }
+function drawLinks(b, c) {
+  const ul = el("ul", {class:"links"});
+  for (const s of c.sources || []) ul.append(el("li", {}, el("a", {href: s.url, target:"_blank", rel:"noopener"}, el("span", {text: s.title || hostOf(s.url)}), el("span", {class:"h", text: hostOf(s.url)}))));
+  b.append(ul);
+}
+
+/* redraw on resize */
+let rz, lastW = 0; new ResizeObserver(en => { const w = Math.round(en[0].contentRect.width); if (w === lastW) return; lastW = w; clearTimeout(rz); rz = setTimeout(() => drawAll(), 120); }).observe($("#grid"));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => drawAll());
+new MutationObserver(() => drawAll()).observe(document.documentElement, {attributes: true, attributeFilter: ["data-theme"]});
+
+/* ---------- menus ---------- */
+let openMenu = null;
+function closeMenu() { if (openMenu) { openMenu.remove(); openMenu = null; } }
+document.addEventListener("click", e => { if (openMenu && !openMenu.contains(e.target)) closeMenu(); }, true);
+document.addEventListener("keydown", e => { if (e.key === "Escape") { closeMenu(); closeEditor(); } });
+function popMenu(anchor, build) {
+  closeMenu();
+  const m = el("div", {class:"menu", role:"menu"});
+  build(m);
+  document.body.append(m);
+  const r = anchor.getBoundingClientRect();
+  m.style.top = (r.bottom + scrollY + 6) + "px";
+  m.style.left = Math.max(8, Math.min(r.right + scrollX - m.offsetWidth, innerWidth - m.offsetWidth - 8)) + "px";
+  openMenu = m;
+  setTimeout(() => m.querySelector("button")?.focus(), 0);
+}
+function cardMenu(e, c) {
+  e.stopPropagation();
+  const cards = boardCards(c.boardId), i = cards.findIndex(x => x.id === c.id);
+  popMenu(e.currentTarget, m => {
+    m.append(el("button", {type:"button", onclick: () => { closeMenu(); openEditor(c); }, text:"Edit card"}));
+    const sizes = [[4, "Small"], [6, "Medium"], [12, "Full width"]];
+    m.append(el("hr"));
+    for (const [n, name] of sizes) m.append(el("button", {type:"button", onclick: () => { closeMenu(); guard(Data.setCard({...c, span: n, updatedAt: Date.now()})); }, text: (c.span || 4) === n ? "✓ " + name : name}));
+    m.append(el("hr"));
+    if (i > 0) m.append(el("button", {type:"button", onclick: () => { closeMenu(); swap(cards[i], cards[i - 1]); }, text:"Move earlier"}));
+    if (i < cards.length - 1) m.append(el("button", {type:"button", onclick: () => { closeMenu(); swap(cards[i], cards[i + 1]); }, text:"Move later"}));
+    m.append(el("button", {type:"button", onclick: () => { closeMenu(); guard(Data.setCard({...clone(c), id: uid("c"), title: (c.title || "Card") + " (copy)", order: (c.order ?? 0) + 0.5, createdAt: Date.now()})); }, text:"Duplicate"}));
+    m.append(el("hr"));
+    const del = el("button", {type:"button", class:"danger", style:"color:var(--bad)", text:"Delete card", onclick: ev => {
+      ev.stopPropagation();
+      del.replaceWith(el("div", {class:"confirm", text:"Delete “" + (c.title || "this card") + "”?"}), el("button", {type:"button", style:"color:var(--bad)", onclick: () => { closeMenu(); guard(Data.delCard(c.id)); }, text:"Yes, delete"}), el("button", {type:"button", onclick: closeMenu, text:"Keep it"}));
+    }});
+    m.append(del);
+  });
+}
+const clone = o => JSON.parse(JSON.stringify(o));
+async function swap(a, b) {
+  const cards = boardCards(a.boardId);
+  cards.forEach((c, i) => c._o = i * 10);
+  const ao = a._o, bo = b._o;
+  for (const c of cards) {
+    const o = c === a ? bo : c === b ? ao : c._o;
+    delete c._o;
+    if ((c.order ?? null) !== o) { if (!(await guard(Data.setCard({...c, order: o})))) return; }
+  }
+}
+$("#boardMenuBtn").addEventListener("click", e => {
+  e.stopPropagation();
+  const b = currentBoard(); if (!b) return;
+  popMenu(e.currentTarget, m => {
+    m.append(el("button", {type:"button", onclick: () => { closeMenu(); $("#btitle").focus(); $("#btitle").select(); }, text:"Rename dashboard"}));
+    m.append(el("button", {type:"button", onclick: () => { closeMenu(); newBoard(); }, text:"New dashboard"}));
+    m.append(el("hr"));
+    const del = el("button", {type:"button", style:"color:var(--bad)", text:"Delete dashboard", onclick: ev => {
+      ev.stopPropagation();
+      const n = boardCards(b.id).length;
+      del.replaceWith(el("div", {class:"confirm", text:"Delete “" + (b.name || "Untitled") + "” and its " + n + " card" + (n === 1 ? "" : "s") + "?"}), el("button", {type:"button", style:"color:var(--bad)", onclick: () => { closeMenu(); guard(Data.delBoard(b.id)); }, text:"Yes, delete"}), el("button", {type:"button", onclick: closeMenu, text:"Keep it"}));
+    }});
+    m.append(del);
+  });
+});
+
+/* ---------- boards ---------- */
+async function newBoard() {
+  const b = {id: uid("b"), name: "Untitled dashboard", order: (d3.max(S.boards, x => x.order ?? 0) ?? 0) + 1, createdAt: Date.now()};
+  S.current = b.id; store.set("sb.board", b.id);
+  if (await guard(Data.setBoard(b))) setTimeout(() => { $("#btitle").focus(); $("#btitle").select(); }, 60);
+}
+$("#newBoard").addEventListener("click", newBoard);
+$("#btitle").addEventListener("change", e => { const b = currentBoard(); if (b && e.target.value.trim() !== b.name) guard(Data.setBoard({...b, name: e.target.value.trim() || "Untitled dashboard"})); });
+$("#btitle").addEventListener("keydown", e => { if (e.key === "Enter") e.target.blur(); });
+$("#addCard").addEventListener("click", () => openEditor());
+$("#briefClose").addEventListener("click", () => { S.briefHidden = true; $("#brief").hidden = true; });
+
+/* ---------- Claude ---------- */
+const KINDS = ["auto","stat","pie","bar","line","map","table","note","media"];
+const KIND_LABEL = {auto:"Auto", stat:"Number", pie:"Pie", bar:"Bar", line:"Trend", map:"Map", table:"Table", note:"Notes", links:"Links", media:"Files"};
+function interpretPrompt(material, title, imageNames = []) {
+  return `You turn raw material into ONE dashboard card. The material may be pasted data (CSV, tables, lists), text extracted from uploaded documents (PDF, Word, Excel), research notes, URLs, and attached images such as photos, screenshots, scanned pages, charts or designs. You cannot open URLs: use only the text and images given. Only use numbers that appear in the material or are simple arithmetic on them. Never invent or estimate figures.
+
+When an image shows a chart, table, receipt, statement or dashboard, read its values into "items" (or "stat"). When a document contains a data table, extract the most useful table. When there are several tables, pick the one that best answers what the card is about and mention the others in "note". If the material has no numbers, summarise it as a "note" card; if the files themselves are the point (photos, designs) with nothing to chart, use "media" and describe them in "note".
+
+Pick "kind":
+- "stat": one headline number (optionally a series in items for a sparkline, oldest first)
+- "pie": parts of a whole, 2-7 positive parts
+- "bar": comparing categories
+- "line": values over time, oldest first
+- "map": values per country or US state (labels must be country or state names), or points with lat/lon
+- "table": many rows
+- "note": qualitative findings
+- "media": the attached files or images are the content
+
+Reply with only JSON in this shape:
+{"title": string (short, specific), "kind": string, "unit": "" | "$" | "€" | "£" | "%" | other short unit, "items": [{"label": string, "value": number}], "stat": {"value": number, "label": string, "delta": string or null} or null, "scope": "world" | "us" | null, "points": [{"label": string, "lat": number, "lon": number, "value": number}], "note": string (markdown bullets for key findings, may be empty), "insight": string (1-2 plain sentences: what the material says, citing figures and which file they came from), "sources": [{"title": string, "url": string}] (only URLs present in the material)}
+${title ? `\nThe user titled this card: ${title}\n` : ""}${imageNames.length ? `\nAttached images, in order: ${imageNames.map((n, i) => (i + 1) + ". " + n).join("; ")}\n` : ""}
+MATERIAL:
+"""
+${(material || "(no text — see the attached images)").slice(0, 60000)}
+"""`;
+}
+function briefPrompt(b, cards) {
+  const compact = cards.map(c => ({title: c.title, kind: c.kind, unit: c.unit || "", items: (c.items || []).slice(0, 40), stat: c.stat || null, note: (c.note || "").slice(0, 800), insight: c.insight || "", sources: (c.sources || []).map(s => s.url).slice(0, 5), files: (c.attachments || []).map(a => ({name: a.name, about: a.summary, excerpt: (a.text || "").slice(0, 600)}))}));
+  return `Here is a dashboard called "${b.name}". Write a short brief for its owner in markdown: 3-5 bullets on what stands out across the cards (cite specific figures and card titles), then a line starting "**Worth checking:**" naming one gap, inconsistency, or next question. Use only the data given; do not invent numbers. Plain words, no preamble.
+
+${JSON.stringify(compact).slice(0, 40000)}`;
+}
+function sampleErr(e) {
+  const c = e && e.code;
+  if (c === "not_granted" || c === "sampling_disabled" || c === "not_declared" || c === "capability_disabled" || c === "capability_removed") return "Claude isn't available in this view.";
+  if (c === "rate_limited") return "Too many requests right now. Try again in a minute.";
+  if (c === "prompt_too_large") return "That's too much material for one card. Trim it and try again.";
+  if (c === "invalid_json") return "Claude's answer couldn't be read as a card. Try again.";
+  if (c === "refused") return "Claude declined this material. Try different input.";
+  if (c === "session_expired") return "Sign in again to use Claude.";
+  if (c === "cancelled") return "";
+  return "Something went wrong reaching Claude. Try again.";
+}
+$("#briefBtn").addEventListener("click", async () => {
+  const b = currentBoard(); if (!b || !S.sample) return;
+  const btn = $("#briefBtn"); btn.disabled = true; btn.textContent = "Reading the board…";
+  S.briefHidden = false; S.briefStreaming = true;
+  $("#brief").hidden = false; $("#briefBody").replaceChildren(el("p", {class:"hint", text:"Thinking… this can take up to a minute."}));
+  try {
+    const {text} = await S.sample(briefPrompt(b, boardCards(b.id)), {cache: false, onText: ({text}) => $("#briefBody").replaceChildren(md(text))});
+    await guard(Data.setBoard({...currentBoard(), brief: {text, at: Date.now()}}));
+  } catch (e) {
+    const msg = sampleErr(e);
+    $("#briefBody").replaceChildren(e.text ? md(e.text) : el("p", {class:"hint", text: msg || "Stopped."}));
+    if (e.code === "not_granted" || e.code === "sampling_disabled") { S.sample = null; }
+  } finally { S.briefStreaming = false; btn.disabled = false; btn.textContent = "Brief me"; render(); }
+});
+
+/* ---------- files ---------- */
+const MAX_TEXT = 30000;
+const IMG_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+function fileKind(f) {
+  const ext = (f.name.split(".").pop() || "").toLowerCase();
+  if (ext === "svg" || f.type === "image/svg+xml") return "svg";
+  if (f.type.startsWith("image/") || ["png","jpg","jpeg","webp","gif","heic","bmp"].includes(ext)) return "image";
+  if (ext === "pdf" || f.type === "application/pdf") return "pdf";
+  if (ext === "docx") return "doc";
+  if (ext === "doc") return "doc-old";
+  if (["xlsx","xls","xlsm","ods"].includes(ext)) return "sheet";
+  if (["csv","tsv"].includes(ext)) return "csv";
+  if (["txt","md","markdown","json"].includes(ext) || f.type.startsWith("text/")) return "text";
+  return "other";
+}
+const KIND_TAG = {image:"IMG", svg:"SVG", pdf:"PDF", doc:"DOCX", sheet:"XLS", csv:"CSV", text:"TXT", link:"URL"};
+const words = s => (String(s).match(/\S+/g) || []).length;
+function loadImage(src) { return new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = bad; i.src = src; }); }
+function canvasBlob(cv, type = "image/png", q) { return new Promise(ok => cv.toBlob(b => ok(b), type, q)); }
+async function rasterize(blob, maxSide = 1600, type = "image/png") {
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = await loadImage(url);
+    let w = img.naturalWidth || 1200, h = img.naturalHeight || 900;
+    const k = Math.min(1, maxSide / Math.max(w, h)); w = Math.round(w * k); h = Math.round(h * k);
+    const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+    const ctx = cv.getContext("2d");
+    if (type === "image/jpeg" || blob.type === "image/svg+xml") { ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, w, h); }
+    ctx.drawImage(img, 0, 0, w, h);
+    return {blob: await canvasBlob(cv, type, 0.9), w: img.naturalWidth, h: img.naturalHeight};
+  } finally { URL.revokeObjectURL(url); }
+}
+async function readPdf(file, att) {
+  await loadScript(LIB.pdf); await loadScript(LIB.pdfWorker);
+  const lib = window.pdfjsLib; lib.GlobalWorkerOptions.workerSrc = LIB.pdfWorker;
+  const doc = await lib.getDocument({data: new Uint8Array(await file.arrayBuffer())}).promise;
+  const n = doc.numPages, parts = [];
+  for (let i = 1; i <= Math.min(n, 40); i++) {
+    att.status = "Reading page " + i + " of " + n + "…"; att.onchange?.();
+    const tc = await (await doc.getPage(i)).getTextContent();
+    let line = "", out = [], lastY = null;
+    for (const it of tc.items) { const y = it.transform ? Math.round(it.transform[5]) : null; if (lastY !== null && y !== lastY) { out.push(line); line = ""; } line += (line && !line.endsWith(" ") ? " " : "") + it.str; lastY = y; }
+    out.push(line);
+    parts.push("[Page " + i + "]\n" + out.map(s => s.trim()).filter(Boolean).join("\n"));
+  }
+  att.text = parts.join("\n\n").slice(0, MAX_TEXT);
+  const w = words(att.text);
+  const scanned = w < Math.min(n, 40) * 8;
+  // page images: always the first pages when scanned, and page 1 otherwise (for charts and layout)
+  const shots = scanned ? Math.min(n, 4) : 1;
+  att.images = [];
+  for (let i = 1; i <= shots; i++) {
+    const page = await doc.getPage(i), vp = page.getViewport({scale: 1.6});
+    const cv = document.createElement("canvas"); cv.width = vp.width; cv.height = vp.height;
+    const ctx = cv.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height);
+    await page.render({canvasContext: ctx, viewport: vp}).promise;
+    att.images.push(await canvasBlob(cv, "image/jpeg", 0.85));
+    if (i === 1) att.thumb = URL.createObjectURL(att.images[0]);
+  }
+  att.summary = "PDF · " + n + " page" + (n > 1 ? "s" : "") + (scanned ? " · scanned, Claude reads the page images" : " · " + w.toLocaleString() + " words");
+}
+async function readSheet(file, att) {
+  await loadScript(LIB.xlsx);
+  const wb = XLSX.read(await file.arrayBuffer(), {type: "array"});
+  const sheets = wb.SheetNames.map(name => ({name, csv: XLSX.utils.sheet_to_csv(wb.Sheets[name], {blankrows: false}).replace(/(^|\n)(,)+(?=\n|$)/g, "").trim()})).filter(s => s.csv);
+  att.sheets = sheets;
+  att.text = sheets.map(s => "[Sheet: " + s.name + "]\n" + s.csv).join("\n\n").slice(0, MAX_TEXT);
+  const rows = d3.sum(sheets, s => s.csv.split("\n").length);
+  att.summary = "Spreadsheet · " + sheets.length + " sheet" + (sheets.length === 1 ? "" : "s") + " · " + rows.toLocaleString() + " rows";
+  att.csv = sheets[0] ? sheets[0].csv.split("\n").slice(0, 400).join("\n") : "";
+}
+async function processFile(file, att) {
+  const k = att.kind;
+  if (k === "image") {
+    const r = await rasterize(file, 1800, IMG_TYPES.includes(file.type) && file.size < 4e6 ? file.type : "image/png");
+    att.images = [IMG_TYPES.includes(file.type) && file.size < 4e6 ? file : r.blob];
+    att.upload = att.images[0];
+    att.thumb = URL.createObjectURL(att.upload);
+    att.summary = "Image · " + r.w + "×" + r.h + " · Claude can read it";
+  } else if (k === "svg") {
+    const src = await file.text();
+    const d = new DOMParser().parseFromString(src, "image/svg+xml");
+    const labels = [...d.querySelectorAll("text, title, desc")].map(t => t.textContent.trim()).filter(Boolean);
+    att.text = labels.length ? "Text in the SVG:\n" + labels.join("\n") : "";
+    const svgBlob = new Blob([src], {type: "image/svg+xml"});
+    try { const r = await rasterize(svgBlob, 1600); att.images = [r.blob]; } catch { att.images = []; }
+    att.upload = svgBlob; att.thumb = URL.createObjectURL(svgBlob);
+    att.summary = "SVG · " + labels.length + " text label" + (labels.length === 1 ? "" : "s");
+  } else if (k === "pdf") {
+    await readPdf(file, att); att.upload = file;
+  } else if (k === "doc") {
+    await loadScript(LIB.docx);
+    const r = await mammoth.extractRawText({arrayBuffer: await file.arrayBuffer()});
+    att.text = r.value.replace(/\n{3,}/g, "\n\n").trim().slice(0, MAX_TEXT);
+    att.summary = "Word · " + words(att.text).toLocaleString() + " words · text kept, original not stored";
+    att.upload = new Blob([att.text], {type: "text/plain"}); att.uploadType = "text/plain"; att.uploadName = file.name + ".txt";
+  } else if (k === "sheet") {
+    await readSheet(file, att);
+    att.upload = new Blob([att.sheets[0]?.csv || ""], {type: "text/csv"}); att.uploadType = "text/csv";
+  } else if (k === "csv" || k === "text") {
+    let t = await file.text();
+    att.text = t.slice(0, MAX_TEXT);
+    if (k === "csv") { att.csv = t.split(/\r?\n/).slice(0, 400).join("\n"); att.summary = "CSV · " + t.trim().split(/\r?\n/).length.toLocaleString() + " rows"; att.uploadType = "text/csv"; }
+    else { const ext = file.name.split(".").pop().toLowerCase(); att.uploadType = ext === "json" ? "application/json" : /^(md|markdown)$/.test(ext) ? "text/markdown" : "text/plain"; att.summary = "Text · " + words(t).toLocaleString() + " words"; }
+    att.upload = file;
+  } else if (k === "doc-old") {
+    throw new Error("Old .doc files can't be read here. Save it as .docx or PDF and add it again.");
+  } else throw new Error("This file type isn't supported. Try PDF, Word (.docx), Excel, CSV, SVG or an image.");
+}
+function storedAtt(a) {
+  const o = {aid: a.aid, name: a.name, kind: a.kind, size: a.size || 0, summary: a.summary || "", text: (a.text || "").slice(0, MAX_TEXT)};
+  if (a.url) o.url = a.url;
+  if (a.assetId) o.assetId = a.assetId;
+  if (a.note) o.note = a.note;
+  return o;
+}
+function attHref(a) { return a.kind === "link" ? a.url : a.assetId ? blobUrl(a.assetId) : a.thumb || null; }
+function attImg(a) { return (a.kind === "image" || a.kind === "svg") ? (a.thumb || (a.assetId ? blobUrl(a.assetId) : null)) : null; }
+
+/* ---------- editor ---------- */
+let ED = null;
+function closeEditor() {
+  if (!ED) return;
+  ED.ctl?.abort();
+  for (const a of ED.atts || []) if (a.thumb && a.thumb.startsWith("blob:") && !ED.saved) URL.revokeObjectURL(a.thumb);
+  ED.node.remove(); ED = null;
+  if (S.pendingRender) { S.pendingRender = false; render(); }
+}
+function openEditor(card, files) {
+  closeEditor();
+  const b = currentBoard(); if (!b) return;
+  const draft = card ? clone(card) : {id: uid("c"), boardId: b.id, title: "", kind: "auto", raw: "", span: 4, unit: "", insight: "", order: (d3.max(boardCards(b.id), c => c.order ?? 0) ?? 0) + 10, createdAt: Date.now()};
+  ED = {draft, card, choice: card ? (card.kindChoice || card.kind) : "auto", ai: card?.fromClaude ? clone(card) : null, valueCol: card?.valueCol,
+    atts: [...(card?.attachments || []).map(clone), ...(card?.links || []).map(l => ({...clone(l), kind: "link"}))]};
+
+  const title = el("input", {id:"f-title", placeholder:"e.g. Monthly spending, Q3", value: draft.title || ""});
+  const raw = el("textarea", {id:"f-raw", spellcheck:"false", placeholder: "Paste anything:\n\nRent: 1850\nGroceries: 620\nTransport: 210\n\n— or a CSV / spreadsheet copy —\nMonth,Balance\nJan,4200\nFeb,4650\n\n— or research notes —"});
+  raw.value = draft.raw || "";
+  const fileIn = el("input", {type:"file", id:"f-file", multiple: true, accept:".pdf,.docx,.doc,.xlsx,.xls,.ods,.csv,.tsv,.txt,.md,.json,.svg,image/*", hidden: true});
+  const drop = el("div", {class:"drop"}, el("span", {text:"Drop PDFs, Word, Excel, CSV, SVG or images here, paste a screenshot, or"}), el("button", {class:"btn sm", type:"button", onclick: () => fileIn.click(), text:"Choose files"}), fileIn);
+  const linkIn = el("input", {id:"f-link", type:"url", placeholder:"https://… paste a link", "aria-label":"Link to add"});
+  const linkRow = el("div", {class:"linkrow"}, linkIn, el("button", {class:"btn sm", type:"button", text:"Add link", onclick: () => addLink()}));
+  const attList = el("ul", {class:"atts", "aria-live":"polite"});
+  const detected = el("div", {class:"detected", "aria-live":"polite"});
+  const seg = el("div", {class:"seg", role:"group", "aria-label":"Visualize as"});
+  const colSel = el("select", {id:"f-col"});
+  const colField = el("div", {class:"field", hidden: true}, el("label", {for:"f-col", text:"Value column"}), colSel);
+  const scopeSel = el("select", {id:"f-scope"}, el("option", {value:"world", text:"World (countries)"}), el("option", {value:"us", text:"United States (states)"}));
+  const scopeField = el("div", {class:"field", hidden: true}, el("label", {for:"f-scope", text:"Map area"}), scopeSel);
+  const unit = el("input", {id:"f-unit", placeholder:"$, %, kg…", value: draft.unit || ""});
+  const sizeSel = el("select", {id:"f-size"}, el("option", {value:"4", text:"Small"}), el("option", {value:"6", text:"Medium"}), el("option", {value:"12", text:"Full width"}));
+  sizeSel.value = String(draft.span || 4);
+  const insight = el("textarea", {id:"f-insight", class:"short", placeholder:"Optional: what this card tells you. Claude can write this for you."});
+  insight.value = draft.insight || "";
+  const aiBtn = el("button", {class:"btn", type:"button", text:"✦ Read with Claude"});
+  const stopBtn = el("button", {class:"btn sm", type:"button", hidden: true, text:"Stop"});
+  const aiStatus = el("span", {class:"status", "aria-live":"polite"});
+  const previewBox = el("div");
+  const saveBtn = el("button", {class:"btn primary", type:"button", text: card ? "Save card" : "Add to dashboard"});
+
+  for (const k of KINDS) seg.append(el("button", {type:"button", "aria-pressed": String(ED.choice === k), "data-k": k, text: KIND_LABEL[k], onclick: () => { ED.choice = k; seg.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.k === k))); update(); }}));
+
+  const left = el("div", {class:"left"},
+    el("h3", {text: card ? "Edit card" : "New card"}),
+    el("div", {class:"field"}, el("label", {for:"f-title", text:"Title"}), title),
+    el("div", {class:"field"}, el("span", {class:"flabel", text:"Files & links"}), drop, linkRow, attList,
+      S.assets ? null : el("p", {class:"hint", text:"Files are read here, but only their text is saved in this view."})),
+    el("div", {class:"field"}, el("label", {for:"f-raw", text:"Data or notes"}), raw, detected),
+    el("div", {class:"field"}, el("span", {class:"flabel", text:"Visualize as"}), seg),
+    el("div", {class:"row"}, colField, scopeField, el("div", {class:"field"}, el("label", {for:"f-unit", text:"Unit"}), unit), el("div", {class:"field"}, el("label", {for:"f-size", text:"Card size"}), sizeSel)),
+    el("div", {class:"field"}, el("label", {for:"f-insight", text:"Takeaway"}), insight));
+  const right = el("div", {class:"right"},
+    el("span", {class:"flabel", text:"Preview"}), previewBox,
+    S.sample ? el("div", {class:"ai"}, aiBtn, stopBtn, aiStatus) : null,
+    S.sample ? el("p", {class:"hint", text:"Claude reads your pasted text, documents, spreadsheets and images (including screenshots of charts and tables), pulls out the figures, picks a chart and writes a takeaway. It can't open links, so add the page as a PDF or paste its text."}) : null);
+  const foot = el("div", {class:"foot"}, el("button", {class:"btn", type:"button", onclick: closeEditor, text:"Cancel"}), saveBtn);
+  const sheet = el("div", {class:"sheet", role:"dialog", "aria-modal":"true", "aria-label": card ? "Edit card" : "New card"}, left, right, foot);
+  const scrim = el("div", {class:"scrim", onmousedown: e => { if (e.target === scrim) closeEditor(); }}, sheet);
+  document.body.append(scrim);
+  ED.node = scrim;
+  setTimeout(() => (card ? title : raw).focus(), 20);
+
+  if (card?.scope) scopeSel.value = card.scope;
+  let scopeTouched = !!card?.scope, unitTouched = !!card?.unit;
+  scopeSel.addEventListener("change", () => { scopeTouched = true; update(); });
+  unit.addEventListener("input", () => { unitTouched = true; update(); });
+  colSel.addEventListener("change", () => { ED.valueCol = +colSel.value; update(); });
+  let t; raw.addEventListener("input", () => { ED.ai = null; clearTimeout(t); t = setTimeout(update, 180); });
+  [title, insight].forEach(x => x.addEventListener("input", () => { clearTimeout(t); t = setTimeout(update, 180); }));
+  sizeSel.addEventListener("change", update);
+  fileIn.addEventListener("change", () => { addFiles([...fileIn.files]); fileIn.value = ""; });
+  drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
+  drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+  drop.addEventListener("drop", e => { e.preventDefault(); e.stopPropagation(); drop.classList.remove("over"); addFiles([...e.dataTransfer.files]); });
+  scrim.addEventListener("paste", e => { const fs = [...(e.clipboardData?.files || [])]; if (fs.length) { e.preventDefault(); addFiles(fs); } });
+  linkIn.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addLink(); } });
+
+  function addLink() {
+    let u = linkIn.value.trim(); if (!u) return;
+    if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+    try { new URL(u); } catch { toast("That doesn't look like a web address."); return; }
+    if (!ED.atts.some(a => a.kind === "link" && a.url === u)) ED.atts.push({aid: uid("l"), kind: "link", url: u, name: hostOf(u), summary: "Link · saved as a source"});
+    linkIn.value = ""; ED.ai = null; renderAtts(); update();
+  }
+  function addFiles(list) {
+    for (const f of list) {
+      const att = {aid: uid("a"), name: f.name || "Pasted image.png", kind: fileKind(f), size: f.size, status: "Reading…"};
+      ED.atts.push(att);
+      att.onchange = () => ED && renderAtts();
+      if (f.size > 25e6) { att.error = "Over 25 MB. Try a smaller file."; continue; }
+      processFile(f, att).then(() => {
+        if (!ED) return;
+        att.status = "";
+        if (att.csv && !raw.value.trim()) raw.value = att.csv;
+        if (!title.value.trim()) title.value = att.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").slice(0, 80);
+        ED.ai = null; renderAtts(); update();
+      }).catch(e => { att.error = (e && e.message && e.message.length > 30) ? e.message : "Couldn't read this file. It may be damaged or password-protected."; console.error(e); if (ED) { renderAtts(); update(); } });
+    }
+    renderAtts();
+  }
+  function renderAtts() {
+    attList.replaceChildren();
+    for (const a of ED.atts) {
+      const img = attImg(a);
+      const st = a.error || a.status || a.summary || a.url || "";
+      attList.append(el("li", {class:"att"},
+        el("span", {class:"ico"}, img || a.thumb ? el("img", {src: img || a.thumb, alt: ""}) : (KIND_TAG[a.kind] || "FILE")),
+        el("div", {style:"min-width:0"}, el("div", {class:"nm", title: a.url || a.name, text: a.name}), el("div", {class:"st" + (a.error ? " err" : ""), text: st})),
+        el("button", {class:"iconbtn", type:"button", "aria-label":"Remove " + a.name, text:"✕", onclick: () => { ED.atts = ED.atts.filter(x => x !== a); ED.ai = null; renderAtts(); update(); }})));
+    }
+  }
+  renderAtts();
+
+  function build() {
+    const p = parseInput(raw.value, ED.valueCol);
+    const files = ED.atts.filter(a => a.kind !== "link" && !a.error);
+    const links = ED.atts.filter(a => a.kind === "link").map(a => ({title: a.name, url: a.url}));
+    let c;
+    if (ED.ai) {
+      c = {...ED.ai};
+      if (ED.choice !== "auto") c.kind = ED.choice;
+    } else {
+      const auto = autoKind(p);
+      let kind = ED.choice === "auto" ? auto.kind : ED.choice;
+      c = {kind, items: p.items, points: p.points, note: p.note, sources: p.sources, unit: p.unit, scope: auto.scope || (kind === "map" ? (p.points.length ? pointsScope(p.points) : geoMatch(p.items) || "world") : null), valueName: p.valueName, labelName: p.columns[0], origin: p.format ? p.format.split(" · ")[0] : ""};
+      if (ED.choice === "auto" && !p.items.length && !p.points.length && !p.note && files.length) c.kind = "media";
+      else if (kind === "links" || (kind === "note" && !p.note && (p.sources.length || links.length) && !files.length)) c.kind = p.note ? "note" : "links";
+    }
+    const srcs = [...(c.sources || [])];
+    for (const l of links) if (!srcs.some(s => s.url === l.url)) srcs.push(l);
+    c.sources = srcs;
+    c.attachments = files;
+    if (c.kind === "map" && scopeTouched) c.scope = scopeSel.value;
+    if (unitTouched) c.unit = unit.value.trim();
+    c.title = title.value.trim() || c.title || "";
+    c.insight = insight.value.trim() || (ED.ai ? ED.ai.insight : "") || "";
+    c.span = +sizeSel.value;
+    c.kindChoice = ED.choice;
+    const cols = p.columns.length ? p.numericCols : [];
+    colField.hidden = cols.length < 2 || !!ED.ai;
+    if (!colField.hidden) { colSel.replaceChildren(...cols.map(i => el("option", {value: i, text: p.columns[i]}))); colSel.value = String(p.valueCol ?? cols[0]); }
+    scopeField.hidden = c.kind !== "map";
+    if (!scopeTouched && c.scope) scopeSel.value = c.scope;
+    if (!unitTouched) unit.placeholder = c.unit ? "Detected: " + c.unit : "$, %, kg…";
+    detected.textContent = ED.ai ? "Read by Claude" : p.format ? "Found " + p.format + (p.sources.length ? " · " + p.sources.length + " link" + (p.sources.length > 1 ? "s" : "") : "") + (ED.choice === "auto" ? " → " + (KIND_LABEL[c.kind] || c.kind) : "") : p.sources.length ? "Found " + p.sources.length + " link" + (p.sources.length > 1 ? "s" : "") : "";
+    return c;
+  }
+  function update() {
+    if (!ED) return;
+    const c = build();
+    ED.built = c;
+    const node = cardEl({...c, title: c.title || "Untitled card"}, true);
+    previewBox.replaceChildren(node);
+    requestAnimationFrame(() => drawAll(previewBox));
+  }
+  update();
+  if (files && files.length) addFiles(files);
+
+  async function gatherImages(max) {
+    const out = [], names = [];
+    for (const a of ED.atts) {
+      if (a.error || out.length >= max) continue;
+      let imgs = a.images;
+      if (!imgs && a.assetId && (a.kind === "image" || a.kind === "svg")) {
+        try { const r = await fetch(blobUrl(a.assetId)); if (r.ok) { const bl = await r.blob(); imgs = [a.kind === "svg" ? (await rasterize(new Blob([await bl.text()], {type: "image/svg+xml"}))).blob : bl]; } } catch {}
+      }
+      (imgs || []).forEach((im, i) => { if (out.length < max && im) { out.push(im); names.push(a.name + (a.kind === "pdf" ? " (page " + (i + 1) + ")" : "")); } });
+    }
+    return {out, names};
+  }
+  function material() {
+    const parts = [];
+    let budget = 45000;
+    if (raw.value.trim()) { const t = raw.value.trim().slice(0, 15000); parts.push("PASTED BY THE USER:\n" + t); budget -= t.length; }
+    const docs = ED.atts.filter(a => a.kind !== "link" && !a.error && a.text);
+    for (const a of docs) {
+      const share = Math.max(2000, Math.floor(budget / Math.max(1, docs.length)));
+      parts.push("FILE: " + a.name + " (" + (a.summary || a.kind) + ")\n" + a.text.slice(0, share));
+    }
+    const links = ED.atts.filter(a => a.kind === "link");
+    if (links.length) parts.push("LINKS (not opened):\n" + links.map(l => l.url).join("\n"));
+    return parts.join("\n\n---\n\n");
+  }
+
+  aiBtn.addEventListener("click", async () => {
+    if (ED.atts.some(a => a.status && !a.error)) { aiStatus.textContent = "Still reading your files. Try again in a moment."; return; }
+    const hasFiles = ED.atts.some(a => a.kind !== "link" && !a.error);
+    if (!raw.value.trim() && !hasFiles && !ED.atts.length) { aiStatus.textContent = "Add a file, a link, or paste some text first."; return; }
+    ED.ctl = new AbortController();
+    aiBtn.disabled = true; stopBtn.hidden = false; aiStatus.textContent = "Reading your material… (up to a minute)";
+    try {
+      const maxImg = S.limits?.images?.maxCount || 0;
+      const {out: imgs, names} = maxImg ? await gatherImages(maxImg) : {out: [], names: []};
+      const wantedImages = ED.atts.some(a => a.images?.length || a.kind === "image" || a.kind === "svg");
+      const r = await S.sample.json(interpretPrompt(material(), title.value.trim(), names), imgs.length ? {signal: ED.ctl.signal, images: imgs} : {signal: ED.ctl.signal});
+      if (!r || typeof r !== "object") throw {code: "invalid_json"};
+      const items = Array.isArray(r.items) ? r.items.map(i => ({label: String(i.label ?? ""), value: Number(i.value)})).filter(i => isFinite(i.value)) : [];
+      const points = Array.isArray(r.points) ? r.points.map(p => ({label: String(p.label ?? ""), lat: Number(p.lat), lon: Number(p.lon), value: Number(p.value ?? 1)})).filter(p => isFinite(p.lat) && isFinite(p.lon)) : [];
+      const sources = Array.isArray(r.sources) ? r.sources.filter(s => s && /^https?:\/\//.test(s.url)).map(s => ({title: String(s.title || hostOf(s.url)), url: String(s.url)})) : [];
+      const pl = parseInput(raw.value);
+      for (const s of pl.sources) if (!sources.some(x => x.url === s.url)) sources.push(s);
+      let kind = KINDS.includes(r.kind) || r.kind === "links" ? r.kind : items.length ? "bar" : "note";
+      ED.ai = {kind, items, points, sources, unit: typeof r.unit === "string" ? r.unit.slice(0, 8) : "", scope: r.scope === "us" ? "us" : r.scope === "world" ? "world" : (kind === "map" ? geoMatch(items) || "world" : null),
+        stat: r.stat && isFinite(Number(r.stat.value)) ? {value: Number(r.stat.value), label: String(r.stat.label || ""), delta: r.stat.delta ? String(r.stat.delta) : null} : null,
+        note: typeof r.note === "string" ? r.note : "", insight: typeof r.insight === "string" ? r.insight : "", title: typeof r.title === "string" ? r.title : "", origin: "Read by Claude", fromClaude: true};
+      if (!title.value.trim() || (ED.atts.length && title.value.trim() === (ED.atts.find(a => a.name)?.name || "").replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").slice(0, 80))) { if (ED.ai.title) title.value = ED.ai.title; }
+      if (!insight.value.trim() && ED.ai.insight) insight.value = ED.ai.insight;
+      ED.choice = "auto"; seg.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.k === "auto")));
+      unitTouched = false; scopeTouched = false; unit.value = "";
+      aiStatus.textContent = wantedImages && !imgs.length ? "Done, from the text only: images can't be sent to Claude in this view." : "Done. Check the preview, then save.";
+      update();
+    } catch (e) {
+      aiStatus.textContent = e && e.code === "images_unavailable" ? "Images can't be sent to Claude in this view. Remove them or paste their text." : e && e.code === "image_rejected" ? "One of the images couldn't be sent. Try a smaller PNG or JPG." : sampleErr(e);
+      if (e && (e.code === "not_granted" || e.code === "sampling_disabled")) { aiBtn.hidden = true; }
+    } finally { aiBtn.disabled = false; stopBtn.hidden = true; }
+  });
+  stopBtn.addEventListener("click", () => ED?.ctl?.abort());
+
+  saveBtn.addEventListener("click", async () => {
+    if (ED.atts.some(a => a.status && !a.error)) { toast("Still reading your files. Save again in a moment."); return; }
+    saveBtn.disabled = true;
+    // store originals
+    const pending = ED.atts.filter(a => a.upload && !a.assetId && !a.error);
+    if (pending.length && S.assets) {
+      saveBtn.textContent = "Uploading files…";
+      let failed = 0;
+      for (const a of pending) {
+        try { const r = await S.assets.upload(a.upload, a.uploadType ? {type: a.uploadType} : (a.upload.type ? undefined : {type: "application/octet-stream"})); a.assetId = r.id; }
+        catch (e) { failed++; console.warn(e); }
+      }
+      if (failed) toast(failed + " file" + (failed > 1 ? "s" : "") + " couldn't be stored. The extracted text is still saved.");
+      saveBtn.textContent = card ? "Save card" : "Add to dashboard";
+    }
+    const c = build();
+    const files = ED.atts.filter(a => a.kind !== "link" && !a.error).map(storedAtt);
+    // keep the document well under the store's size limit
+    let total = d3.sum(files, f => f.text.length);
+    if (total > 120000) { const k = 120000 / total; for (const f of files) f.text = f.text.slice(0, Math.floor(f.text.length * k)); }
+    const links = ED.atts.filter(a => a.kind === "link").map(a => ({aid: a.aid, url: a.url, name: a.name, summary: a.summary}));
+    const out = {...draft, ...c, attachments: files, links, raw: raw.value, valueCol: ED.valueCol ?? null, fromClaude: !!ED.ai, updatedAt: Date.now()};
+    if (!out.title) out.title = c.kind === "stat" && c.items?.[0]?.label ? c.items[0].label : files[0]?.name || "Untitled card";
+    if (out.kind === "auto") out.kind = "note";
+    for (const k of Object.keys(out)) if (out[k] === undefined) delete out[k];
+    const ok = await guard(Data.setCard(JSON.parse(JSON.stringify(out))));
+    saveBtn.disabled = false;
+    if (ok) { ED.saved = true; closeEditor(); if (!card) toast("Card added"); }
+  });
+}
+
+/* board-level drop and paste open a new card with the files */
+const mainEl = document.querySelector("main");
+mainEl.addEventListener("dragover", e => { if (!ED && currentBoard() && e.dataTransfer?.types?.includes("Files")) { e.preventDefault(); document.body.classList.add("dropping"); } });
+mainEl.addEventListener("dragleave", e => { if (!mainEl.contains(e.relatedTarget)) document.body.classList.remove("dropping"); });
+mainEl.addEventListener("drop", e => { document.body.classList.remove("dropping"); if (ED || !currentBoard()) return; const fs = [...(e.dataTransfer?.files || [])]; if (fs.length) { e.preventDefault(); openEditor(null, fs); } });
+document.addEventListener("paste", e => {
+  if (ED || !currentBoard()) return;
+  const tag = document.activeElement?.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA") return;
+  const fs = [...(e.clipboardData?.files || [])];
+  if (fs.length) { e.preventDefault(); openEditor(null, fs); }
+});
+
+/* ---------- boot ---------- */
+S.current = store.get("sb.board");
+render();
+(async () => {
+  const hasClaude = typeof window.claude !== "undefined" && window.claude && window.claude.use;
+  const [db, sample, assets] = hasClaude ? await Promise.all([window.claude.use("db").catch(() => null), window.claude.use("sample").catch(() => null), window.claude.use("assets").catch(() => null)]) : [null, null, null];
+  S.sample = sample; S.assets = assets;
+  S.limits = sample ? await sample.limits().catch(() => null) : null;
+  if (db) {
+    S.db = db;
+    $("#mode").textContent = "Saved to this workspace";
+    db.collection("boards").onSnapshot(snap => { S.boards = snap.docs.map(d => ({id: d.id, ...d.data()})); S.loaded.boards = true; render(); }, () => toast("Lost connection to saved dashboards. Reload to reconnect."));
+    db.collection("cards").onSnapshot(snap => { S.cards = snap.docs.map(d => ({id: d.id, ...d.data()})); S.loaded.cards = true; if (!ED) render(); else S.pendingRender = true; }, () => {});
+  } else {
+    $("#mode").textContent = "Preview · changes are not saved";
+    S.boards = [DEMO_BOARD];
+    S.cards = [
+      {id:"d1", boardId:"demo", title:"Example: monthly spending", kind:"pie", unit:"$", span:6, order:1, items:[{label:"Rent",value:1850},{label:"Groceries",value:620},{label:"Transport",value:210},{label:"Dining out",value:340},{label:"Utilities",value:180}], insight:"Example data. Rent is over half of the $3,200 total.", origin:"Example"},
+      {id:"d2", boardId:"demo", title:"Example: savings balance", kind:"line", unit:"$", span:6, order:2, items:[{label:"Jan",value:4200},{label:"Feb",value:4650},{label:"Mar",value:4480},{label:"Apr",value:5120},{label:"May",value:5600},{label:"Jun",value:6010}], origin:"Example"},
+      {id:"d3", boardId:"demo", title:"Example: customers by state", kind:"map", scope:"us", span:12, order:3, items:[{label:"CA",value:420},{label:"TX",value:310},{label:"NY",value:280},{label:"FL",value:190},{label:"IL",value:120},{label:"WA",value:95},{label:"GA",value:60}], origin:"Example"}
+    ];
+    render();
+  }
+})();
+</script>

@@ -1,0 +1,62 @@
+{
+  "note": "Example data used to seed the starter dashboard. Figures are made up for demonstration.",
+  "boards": [
+    {
+      "id": "starter",
+      "name": "Getting started (example data)",
+      "order": 0
+    }
+  ],
+  "cards": [
+    {
+      "id": "ex-stat",
+      "boardId": "starter",
+      "title": "Example: emergency fund",
+      "kind": "stat",
+      "unit": "$",
+      "span": 4,
+      "order": 10,
+      "raw": "Jan: 4200\nFeb: 4650\nMar: 4480\nApr: 5120\nMay: 5600\nJun: 6010"
+    },
+    {
+      "id": "ex-pie",
+      "boardId": "starter",
+      "title": "Example: monthly spending",
+      "kind": "pie",
+      "unit": "$",
+      "span": 4,
+      "order": 20,
+      "raw": "Rent: $1850\nGroceries: $620\nDining out: $340\nTransport: $210\nUtilities: $180"
+    },
+    {
+      "id": "ex-bar",
+      "boardId": "starter",
+      "title": "Example: top merchants this quarter",
+      "kind": "bar",
+      "unit": "$",
+      "span": 4,
+      "order": 30,
+      "raw": "Whole Foods: 740\nAmazon: 615\nShell: 290\nNetflix: 46\nUber: 188\nTarget: 402"
+    },
+    {
+      "id": "ex-line",
+      "boardId": "starter",
+      "title": "Example: portfolio value",
+      "kind": "line",
+      "unit": "$",
+      "span": 6,
+      "order": 40,
+      "raw": "Month,Value\nJan,18200\nFeb,18950\nMar,17800\nApr,19400\nMay,20150\nJun,21030\nJul,20700\nAug,21980"
+    },
+    {
+      "id": "ex-map",
+      "boardId": "starter",
+      "title": "Example: newsletter readers by country",
+      "kind": "map",
+      "scope": "world",
+      "span": 12,
+      "order": 60,
+      "raw": "Country,Readers\nUnited States,1200\nIndia,880\nGermany,540\nBrazil,410\nJapan,300\nUK,260\nNigeria,190\nAustralia,150"
+    }
+  ]
+}
